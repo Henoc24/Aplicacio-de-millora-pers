@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>September — Personal OS</title>
+<meta name="theme-color" content="#14171C">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="September">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+
+  <header class="statusbar">
+    <div class="statusbar-top">
+      <div class="wordmark">SEPTEMBER<span>· personal os</span></div>
+      <div class="clock" id="clock">--:--</div>
+    </div>
+    <div class="countdown-row">
+      <div class="countdown-num" id="dayCounter">--</div>
+      <div class="countdown-text">
+        <span id="dayCounterLabel">dia del sistema</span>
+        <div id="sprintBadge" class="sprint-badge" hidden>
+          <span id="sprintBadgeText">-- dies fins l'1 de set.</span>
+          <div class="sprint-track"><div class="sprint-fill" id="sprintFill"></div></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="screens">
+
+    <!-- AVUI -->
+    <section id="screen-avui" class="screen active">
+      <h1 class="screen-title">Avui</h1>
+
+      <div class="card">
+        <div class="card-label">Hàbits</div>
+        <ul id="habitList" class="habit-list"></ul>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Son</div>
+        <div class="row">
+          <label for="bedtimeInput" class="row-label">Anit vaig anar a dormir a les</label>
+          <input type="time" id="bedtimeInput">
+        </div>
+        <div class="row son-window-row">
+          <span class="row-label">Dins la franja objectiu (23:30–00:30)</span>
+          <span class="habit-window mono" id="sonWindow">0/7</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Gestionar hàbits</div>
+        <ul id="habitManageList" class="manage-list"></ul>
+        <div class="add-habit-row">
+          <input type="text" id="newHabitName" placeholder="Nom del nou hàbit">
+          <button class="btn btn-ghost btn-compact" id="addHabitBtn">+ Afegir</button>
+        </div>
+      </div>
+
+      <div class="card focus-card">
+        <div class="card-label">Focus</div>
+        <div class="row">
+          <div class="row-label">Sessions completades avui</div>
+          <div class="row-value mono" id="focusTodayCount">0</div>
+        </div>
+        <button class="btn btn-accent" id="goFocusBtn">Començar sessió de focus</button>
+      </div>
+    </section>
+
+    <!-- FOCUS -->
+    <section id="screen-focus" class="screen">
+      <h1 class="screen-title">Focus</h1>
+
+      <div id="focusSetup" class="card">
+        <div class="card-label">Nova sessió</div>
+        <div class="field">
+          <label for="focusSubject">Assignatura / tema</label>
+          <input type="text" id="focusSubject" placeholder="p. ex. Càlcul">
+        </div>
+        <div class="field">
+          <label for="focusObjective">Objectiu concret</label>
+          <input type="text" id="focusObjective" placeholder="p. ex. Derivades — exercicis 1 a 8">
+        </div>
+        <div class="field">
+          <label for="focusDuration">Durada (minuts)</label>
+          <input type="number" id="focusDuration" min="1" max="180" step="5" placeholder="p. ex. 25">
+        </div>
+        <button class="btn btn-accent2" id="startFocusBtn">Començar</button>
+      </div>
+
+      <div id="focusRunning" class="card focus-running" hidden>
+        <div class="focus-meta">
+          <div id="focusRunningSubject" class="focus-subject">—</div>
+          <div id="focusRunningObjective" class="focus-objective">—</div>
+        </div>
+        <div class="timer" id="timerDisplay">00:00</div>
+        <button class="btn btn-warn" id="lostFocusBtn">He perdut el focus <span id="interruptionCount" class="mono">(0)</span></button>
+        <div class="focus-controls">
+          <button class="btn btn-ghost" id="pauseFocusBtn">Pausa</button>
+          <button class="btn btn-ghost" id="endFocusBtn">Acabar</button>
+        </div>
+      </div>
+
+      <div id="focusLog" class="card" hidden>
+        <div class="card-label">Registre de la sessió</div>
+        <div class="field">
+          <label for="logMinutes">Temps real (minuts)</label>
+          <input type="number" id="logMinutes" min="0" max="300">
+        </div>
+        <div class="field">
+          <label>Tasca completada?</label>
+          <div class="segmented" id="completedSeg">
+            <button type="button" class="seg-btn" data-val="true">Sí</button>
+            <button type="button" class="seg-btn" data-val="false">No</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Comprensió</label>
+          <div class="segmented" id="comprehensionSeg">
+            <button type="button" class="seg-btn" data-val="green">🟢</button>
+            <button type="button" class="seg-btn" data-val="yellow">🟡</button>
+            <button type="button" class="seg-btn" data-val="red">🔴</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Dificultat</label>
+          <div class="segmented" id="difficultySeg">
+            <button type="button" class="seg-btn" data-val="easy">Fàcil</button>
+            <button type="button" class="seg-btn" data-val="normal">Normal</button>
+            <button type="button" class="seg-btn" data-val="hard">Difícil</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="logInterruptions">Interrupcions</label>
+          <input type="number" id="logInterruptions" min="0" max="50">
+        </div>
+        <button class="btn btn-accent" id="saveFocusLogBtn">Guardar</button>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Per assignatura</div>
+        <ul id="subjectSummary" class="history-list"></ul>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Sessions recents</div>
+        <ul id="focusHistory" class="history-list"></ul>
+      </div>
+    </section>
+
+    <!-- SETMANA -->
+    <section id="screen-setmana" class="screen">
+      <h1 class="screen-title">Setmana</h1>
+
+      <div class="card">
+        <div class="card-label" id="weekLabel">Revisió de la setmana</div>
+
+        <div class="field">
+          <label for="weightInput">Pes (kg)</label>
+          <input type="number" id="weightInput" step="0.1" min="30" max="200">
+        </div>
+
+        <div class="pillar-ratings" id="pillarRatings"></div>
+
+        <div class="card-label sub">Comunicació — accions concretes</div>
+        <div class="phone-grid" style="grid-template-columns: 1fr 1fr;">
+          <div class="field">
+            <label for="commsNewPeople">Persones noves amb qui vaig parlar</label>
+            <input type="number" id="commsNewPeople" min="0" max="50">
+          </div>
+          <div class="field">
+            <label for="commsSpokeUp">Vaig expressar una opinió / parlar en grup</label>
+            <input type="number" id="commsSpokeUp" min="0" max="50">
+          </div>
+        </div>
+
+        <div class="card-label sub">Aura — factors</div>
+        <div class="pillar-ratings" id="auraRatings"></div>
+
+        <div class="field">
+          <label for="socialInput">Interaccions socials intencionades</label>
+          <input type="number" id="socialInput" min="0" max="50">
+        </div>
+
+        <div class="card-label sub">Mòbil — hores/dia de mitjana</div>
+        <div class="phone-grid">
+          <div class="field">
+            <label for="phoneUtil">Útil</label>
+            <input type="number" id="phoneUtil" step="0.5" min="0" max="24">
+          </div>
+          <div class="field">
+            <label for="phoneOci">Oci</label>
+            <input type="number" id="phoneOci" step="0.5" min="0" max="24">
+          </div>
+          <div class="field">
+            <label for="phoneAuto">Automàtic</label>
+            <input type="number" id="phoneAuto" step="0.5" min="0" max="24">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="weekNotes">Notes (opcional)</label>
+          <textarea id="weekNotes" rows="2" placeholder="Res obligatori — només si vols apuntar alguna cosa"></textarea>
+        </div>
+
+        <button class="btn btn-accent" id="saveWeekBtn">Guardar setmana</button>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Setmanes anteriors</div>
+        <ul id="weekHistory" class="history-list"></ul>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Còpia de seguretat</div>
+        <button class="btn btn-ghost" id="exportBtn">Exportar dades (.json)</button>
+        <div class="field" style="margin-top:12px;">
+          <label for="importFile">Importar còpia de seguretat</label>
+          <input type="file" id="importFile" accept="application/json">
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="tabbar">
+    <button class="tab active" data-screen="avui">
+      <span class="tab-mark">01</span>Avui
+    </button>
+    <button class="tab" data-screen="focus">
+      <span class="tab-mark">02</span>Focus
+    </button>
+    <button class="tab" data-screen="setmana">
+      <span class="tab-mark">03</span>Setmana
+    </button>
+  </nav>
+
+</div>
+<script src="app.js"></script>
+</body>
+</html>
