@@ -1,0 +1,45 @@
+{
+  "nom": "Hipertròfia",
+  "rutina": {
+    "dilluns": {
+      "etiqueta": "Upper A",
+      "exercicis": [
+        { "nom": "Press banca", "series": 3, "repeticions": "6-10", "ultimPes": 60 },
+        { "nom": "Rem amb barra", "series": 3, "repeticions": "8-12", "ultimPes": 40 },
+        { "nom": "Elevacions laterals", "series": 3, "repeticions": "12-20", "ultimPes": 8 }
+      ]
+    },
+    "dimarts": {
+      "etiqueta": "Descans",
+      "exercicis": []
+    },
+    "dimecres": {
+      "etiqueta": "Lower A",
+      "exercicis": [
+        { "nom": "Esquat", "series": 4, "repeticions": "6-10", "ultimPes": 70 },
+        { "nom": "Peso mort romanès", "series": 3, "repeticions": "8-12", "ultimPes": 50 }
+      ]
+    },
+    "dijous": {
+      "etiqueta": "Descans",
+      "exercicis": []
+    },
+    "divendres": {
+      "etiqueta": "Upper B",
+      "exercicis": [
+        { "nom": "Press militar", "series": 3, "repeticions": "6-10", "ultimPes": 30 },
+        { "nom": "Dominades", "series": 3, "repeticions": "6-10", "ultimPes": 0 }
+      ]
+    },
+    "dissabte": {
+      "etiqueta": "Lower B",
+      "exercicis": [
+        { "nom": "Pes mort", "series": 3, "repeticions": "5-8", "ultimPes": 80 }
+      ]
+    },
+    "diumenge": {
+      "etiqueta": "Descans",
+      "exercicis": []
+    }
+  }
+}

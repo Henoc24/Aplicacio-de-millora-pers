@@ -39,9 +39,46 @@
     <section id="screen-avui" class="screen active">
       <h1 class="screen-title">Avui</h1>
 
+      <div class="card" id="narrativeCard" hidden>
+        <div class="card-label">Context</div>
+        <ul class="narrative-list" id="narrativeList"></ul>
+      </div>
+
       <div class="card">
         <div class="card-label">Hàbits</div>
         <ul id="habitList" class="habit-list"></ul>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Rutina d'avui</div>
+        <div id="routineEmpty">
+          <p class="hint-text" style="margin-top:0;">Sense rutina carregada. Puja un JSON amb la teva rutina setmanal.</p>
+          <input type="file" id="routineFile" accept="application/json">
+        </div>
+        <div id="routineToday" hidden>
+          <div class="row">
+            <span class="row-label" id="routineDayLabel">—</span>
+            <button class="remove-btn" id="removeRoutineBtn" aria-label="Treure la rutina">✕</button>
+          </div>
+          <ul class="exercise-list" id="exerciseList"></ul>
+          <button class="btn btn-ghost btn-compact" id="markRoutineDoneBtn" style="margin-top:10px;" hidden>Marca "Entrenament" com a fet</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Horari</div>
+        <div id="horariEmpty">
+          <p class="hint-text" style="margin-top:0;">Sense horari carregat. Puja un JSON amb els blocs de la teva setmana (classes, EOI, acadèmia, gimnàs...).</p>
+          <input type="file" id="horariFile" accept="application/json">
+        </div>
+        <div id="horariToday" hidden>
+          <ul class="exercise-list" id="horariList"></ul>
+          <div class="row" style="margin-top:12px;">
+            <button class="remove-btn" id="removeHorariBtn" aria-label="Treure l'horari">✕</button>
+            <button class="btn btn-ghost btn-compact" id="exportIcsBtn">Exportar a calendari (.ics)</button>
+          </div>
+          <p class="hint-text">Importa aquest .ics al Calendari del mòbil perquè les notificacions les faci el sistema, no la PWA (no és fiable fer-ho des d'aquí — explicat al README).</p>
+        </div>
       </div>
 
       <div class="card">
@@ -50,9 +87,14 @@
           <label for="bedtimeInput" class="row-label">Anit vaig anar a dormir a les</label>
           <input type="time" id="bedtimeInput">
         </div>
+        <div class="sleep-bar" id="sleepBar">
+          <div class="sleep-bar-target" id="sleepBarTarget"></div>
+          <div class="sleep-bar-marker" id="sleepBarMarker" hidden></div>
+        </div>
+        <div class="sleep-bar-labels mono"><span>21:00</span><span>franja objectiu</span><span>03:00</span></div>
         <div class="row son-window-row">
           <span class="row-label">Dins la franja objectiu (23:30–00:30)</span>
-          <span class="habit-window mono" id="sonWindow">0/7</span>
+          <span class="dot-row" id="sonWindow"></span>
         </div>
       </div>
 
@@ -94,6 +136,7 @@
           <input type="number" id="focusDuration" min="1" max="180" step="5" placeholder="p. ex. 25">
         </div>
         <button class="btn btn-accent2" id="startFocusBtn">Començar</button>
+        <button class="btn btn-ghost btn-quickstart" id="quickStart2Btn">O comença ja — només 2 minuts, sense pensar-hi més</button>
       </div>
 
       <div id="focusRunning" class="card focus-running" hidden>
@@ -101,8 +144,24 @@
           <div id="focusRunningSubject" class="focus-subject">—</div>
           <div id="focusRunningObjective" class="focus-objective">—</div>
         </div>
-        <div class="timer" id="timerDisplay">00:00</div>
+        <div class="timer-ring-wrap">
+          <svg class="timer-ring" viewBox="0 0 120 120">
+            <circle class="timer-ring-track" cx="60" cy="60" r="54"></circle>
+            <circle class="timer-ring-progress" id="timerRingProgress" cx="60" cy="60" r="54"></circle>
+          </svg>
+          <div class="timer" id="timerDisplay">00:00</div>
+        </div>
         <button class="btn btn-warn" id="lostFocusBtn">He perdut el focus <span id="interruptionCount" class="mono">(0)</span></button>
+        <div class="reason-chips" id="reasonChips" hidden>
+          <span class="reason-chips-label">Per què? (opcional)</span>
+          <div class="chip-row">
+            <button type="button" class="chip" data-reason="mobil">Mòbil</button>
+            <button type="button" class="chip" data-reason="soroll">Soroll</button>
+            <button type="button" class="chip" data-reason="cansament">Cansament</button>
+            <button type="button" class="chip" data-reason="tasca_poc_clara">Tasca poc clara</button>
+            <button type="button" class="chip" data-reason="altra">Altra</button>
+          </div>
+        </div>
         <div class="focus-controls">
           <button class="btn btn-ghost" id="pauseFocusBtn">Pausa</button>
           <button class="btn btn-ghost" id="endFocusBtn">Acabar</button>
@@ -151,6 +210,11 @@
       </div>
 
       <div class="card">
+        <div class="card-label">Motius d'interrupció</div>
+        <ul id="reasonSummary" class="history-list"></ul>
+      </div>
+
+      <div class="card">
         <div class="card-label">Sessions recents</div>
         <ul id="focusHistory" class="history-list"></ul>
       </div>
@@ -160,6 +224,16 @@
     <section id="screen-setmana" class="screen">
       <h1 class="screen-title">Setmana</h1>
 
+      <div class="card" id="decisionReviewCard" hidden>
+        <div class="card-label">Decisió de la setmana passada</div>
+        <p class="decision-text" id="previousDecisionText"></p>
+        <div class="segmented" id="decisionOutcomeSeg">
+          <button type="button" class="seg-btn" data-val="kept">Mantinc</button>
+          <button type="button" class="seg-btn" data-val="modified">Modifico</button>
+          <button type="button" class="seg-btn" data-val="dropped">L'elimino</button>
+        </div>
+      </div>
+
       <div class="card">
         <div class="card-label" id="weekLabel">Revisió de la setmana</div>
 
@@ -168,7 +242,8 @@
           <input type="number" id="weightInput" step="0.1" min="30" max="200">
         </div>
 
-        <div class="pillar-ratings" id="pillarRatings"></div>
+        <div class="card-label sub">Pilars — lectura de les dades ja registrades</div>
+        <div class="readout-grid" id="pillarReadouts"></div>
 
         <div class="card-label sub">Comunicació — accions concretes</div>
         <div class="phone-grid" style="grid-template-columns: 1fr 1fr;">
@@ -182,28 +257,32 @@
           </div>
         </div>
 
-        <div class="card-label sub">Aura — factors</div>
-        <div class="pillar-ratings" id="auraRatings"></div>
+        <div class="card-label sub">Aura — factors concrets</div>
+        <div class="row">
+          <span class="row-label">Grooming (rutina de cura personal)</span>
+          <span class="dot-row" id="auraGroomingDots"></span>
+        </div>
+        <p class="hint-text">Aura no demana res més directament: roba/estil, confiança i disciplina ja es veuen als pilars d'aquí dalt (Comunicació i Fortalesa). Sumar-ho tot en un "índex" seria exactament la puntuació inventada que vam treure dels sliders — així que no ho fem.</p>
 
         <div class="field">
           <label for="socialInput">Interaccions socials intencionades</label>
           <input type="number" id="socialInput" min="0" max="50">
         </div>
 
-        <div class="card-label sub">Mòbil — hores/dia de mitjana</div>
-        <div class="phone-grid">
-          <div class="field">
-            <label for="phoneUtil">Útil</label>
-            <input type="number" id="phoneUtil" step="0.5" min="0" max="24">
+        <div class="card-label sub">Mòbil</div>
+        <div class="field">
+          <label>Com ha estat el mòbil aquesta setmana, en conjunt?</label>
+          <div class="segmented" id="phoneUsageSeg">
+            <button type="button" class="seg-btn" data-val="lleuger">Lleuger</button>
+            <button type="button" class="seg-btn" data-val="normal">Normal</button>
+            <button type="button" class="seg-btn" data-val="excessiu">Excessiu</button>
           </div>
-          <div class="field">
-            <label for="phoneOci">Oci</label>
-            <input type="number" id="phoneOci" step="0.5" min="0" max="24">
-          </div>
-          <div class="field">
-            <label for="phoneAuto">Automàtic</label>
-            <input type="number" id="phoneAuto" step="0.5" min="0" max="24">
-          </div>
+        </div>
+
+        <div class="card-label sub">Decisió per a la setmana vinent</div>
+        <div class="field">
+          <label for="nextDecision">Una sola cosa concreta a fer diferent</label>
+          <input type="text" id="nextDecision" placeholder="p. ex. 2 sessions de focus abans de les 12:00">
         </div>
 
         <div class="field">

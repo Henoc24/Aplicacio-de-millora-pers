@@ -8,24 +8,33 @@ en aquesta versió (per això existeix l'exportar/importar, més avall).
 
 ## Què inclou aquesta V0
 
-- **Avui** — hàbits (editables des de la mateixa app — afegeix'n o
-  elimina'n quan et calgui, p. ex. quan comenci el curs) amb finestra de
-  consistència (X/7 dies), Son com a targeta pròpia (hora + franja
-  objectiu 23:30–00:30), comptador de sessions de focus del dia.
-- **Focus** — defineixes assignatura/objectiu/durada (sense valor per
-  defecte — la poses cada vegada), temporitzador, botó "he perdut el
-  focus", registre final (temps real, completada, comprensió 🟢🟡🔴,
-  **dificultat**, interrupcions). Secció "Per assignatura" que agrupa
-  totes les sessions per veure quines assignatures estàs descuidant.
-  Últimes 8 sessions visibles.
-- **Setmana** — pes, autoavaluació 1-10 dels pilars (Físic, Fortalesa,
-  Coneixement, Comunicació), **Aura desagregada en 3 factors**
-  (grooming/imatge, roba/estil, confiança — en comptes d'un sol número
-  inventat), **comunicació com a accions concretes** (persones noves
-  amb qui has parlat, vegades que has expressat una opinió o parlat en
-  grup), interaccions socials, hores de mòbil (útil/oci/automàtic)
-  manual, notes opcionals. Llista de setmanes anteriors per veure
-  tendència.
+- **Avui** — hàbits (editables des de la mateixa app) amb finestra de
+  consistència **en punts visuals** (no text "X/7") acolorits segons el
+  valor. Son com a targeta pròpia amb **barra visual** de la franja
+  objectiu (23:30–00:30) i marcador d'on cau l'hora real. Comptador de
+  sessions de focus del dia.
+- **Focus** — defineixes assignatura/objectiu/durada, o bé prems
+  **"només 2 minuts"** per començar a l'instant sense triar res.
+  Temporitzador com a **anell circular** que es buida amb el temps.
+  Botó "he perdut el focus" — en tocar-lo apareixen uns xips opcionals
+  per etiquetar el motiu (mòbil/soroll/cansament/tasca poc clara/altra);
+  amb el temps, "Motius d'interrupció" mostra el patró agregat.
+  Registre final (temps real, completada, comprensió 🟢🟡🔴,
+  dificultat, interrupcions). Secció "Per assignatura" que agrupa
+  totes les sessions.
+- **Setmana** — pes (amb tendència ↑→↓ un cop hi ha una setmana
+  anterior). **Els pilars ja no són sliders subjectius**: Físic i
+  Fortalesa es llegeixen dels hàbits ja registrats (entrenaments,
+  consistència mitjana), Coneixement es llegeix de les sessions de
+  focus reals. Comunicació i el factor "roba/estil" d'Aura són
+  comptadors concrets; el factor "grooming" es dedueix de l'hàbit de
+  cura personal; "confiança" es va fondre amb Comunicació perquè
+  mesuraven el mateix. Mòbil: una valoració ràpida (lleuger/normal/
+  excessiu) en comptes d'hores exactes, que ningú compta bé de
+  memòria. **Bucle de decisions**: cada revisió acaba triant UNA cosa
+  concreta a fer diferent la setmana vinent; la revisió següent
+  mostra aquesta decisió i pregunta si la mantens, la modifiques o
+  l'elimines.
 
 ## "Dia N" — pensada per durar
 
@@ -74,6 +83,65 @@ del navegador — més ràpid un cop t'hi acostumes, però no cal per començar.
 3. A partir d'aquí s'obre a pantalla completa, com una app normal, amb
    icona pròpia — i funciona sense connexió un cop carregada un primer cop.
 
+## Rutina d'avui (context per al pilar Físic)
+
+A Avui, la targeta "Rutina d'avui" deixa pujar un JSON amb la teva
+rutina setmanal (`rutina-exemple.json` d'aquest zip és una plantilla
+llesta per editar). L'app només ha d'entendre aquest format propi —
+no intenta llegir Excel ni cap altre format, perquè un parser
+d'Excel real es trenca amb qualsevol canvi d'estructura del full i
+acaba sent més feina de mantenir que la que estalvia. Un cop
+importat, es queda guardat (no cal tornar-lo a pujar) i cada dia et
+mostra automàticament què toca segons el dia de la setmana.
+
+L'estructura de dades (`state.context`) està pensada perquè altres
+pilars hi puguin afegir el seu propi context més endavant (per
+exemple, un pla d'estudi per Coneixement) sense haver-ho de
+redissenyar — però de moment només Físic el fa servir de veritat.
+
+L'exercici marcat com a "fet" no cal registrar-lo per separat: la
+targeta té un botó "Marca 'Entrenament' com a fet" que reutilitza
+l'hàbit que ja existeix — no hi ha cap dada nova, només una drecera.
+
+## Context (Avui)
+
+Una targeta que, quan hi ha alguna cosa rellevant, mostra fets
+concrets ja registrats: el resum d'ahir, quants dies fa que no marques
+un hàbit, el motiu d'interrupció més freqüent (a partir de 3 mostres),
+la decisió d'aquesta setmana. **Deliberadament no és un motor de
+correlacions ni de detecció de patrons** — amb pocs dies d'ús,
+"detectar patrons" seria inventar-se'ls. Només diu fets reals en
+frases, no estadística.
+
+## Aura, simplificada
+
+Ja no demana res directament excepte el grooming (que ve de l'hàbit
+"Cura personal"). Es va treure el comptador de "roba/estil" i es va
+descartar la idea de sumar factors en un "índex de presència": sumar
+Físic + Comunicació + hàbits en un sol número hauria estat exactament
+la puntuació inventada que es va eliminar dels sliders, només amagada
+darrere d'una fórmula. Aura remet als pilars que ja es veuen a la
+mateixa pantalla, sense duplicar-los.
+
+## Horari (i notificacions de veritat)
+
+Nova targeta a Avui, `horari-exemple.json` com a plantilla. A
+diferència de la rutina (només Físic), l'horari és blocs de tot el
+dia (classes, EOI, acadèmia, gimnàs...) — pensat per quan comenci el
+curs. Un cop carregat, el botó **"Exportar a calendari (.ics)"**
+genera un fitxer de calendari estàndard amb els blocs com a events
+setmanals repetits.
+
+Importa aquest .ics al Calendari del mòbil (Google Calendar, Calendari
+d'Android...) perquè **les notificacions les faci el sistema
+operatiu, no la PWA**. Ho vam comprovar abans de construir res:
+cap PWA pot garantir-te un avís a una hora concreta si l'app està
+tancada, ni amb backend propi ni sense — la "Periodic Background
+Sync API" de Chrome existeix, però l'interval el decideix el
+navegador, no tu. El calendari del mòbil sí que ho fa de manera
+fiable, i és zero feina extra reutilitzar-lo en comptes de
+reinventar-lo.
+
 ## Coses a saber
 
 - **Sense integració amb Excel** (decisió presa): és independent del full de
@@ -89,6 +157,19 @@ A la pantalla **Setmana**, avall de tot: **"Exportar dades"** descarrega un
 seguretat"** el torna a carregar — substitueix TOTES les dades actuals, et
 demana confirmació abans de fer-ho. Fes-ho servir si canvies de mòbil o
 navegador; res se sincronitza sol.
+
+## Sobre el mòbil: per què no és automàtic
+
+Una PWA (com qualsevol pàgina web) no té accés al Screentime/Digital
+Wellbeing d'altres apps — ni per llegir-lo ni per calcular-lo. Això
+requereix un permís especial (`PACKAGE_USAGE_STATS` a Android) que
+només es pot concedir a una app nativa real, mai a una web obert al
+navegador. És per això que es va reduir a una valoració ràpida
+setmanal (lleuger/normal/excessiu) en comptes d'hores exactes —
+aquestes sí que és factible que les recordis prou bé, a diferència
+d'hores precises per categoria. Automatitzar-ho de veritat és l'únic
+motiu real per sortir de la PWA cap a una app nativa (V3, i només si
+V0/V1 demostren ser útils).
 
 ## Sobre gràfics mensuals/trimestrals
 

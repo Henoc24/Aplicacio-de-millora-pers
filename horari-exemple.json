@@ -1,0 +1,25 @@
+{
+  "horari": {
+    "dilluns": [
+      { "hora": "09:00", "durada": 120, "nom": "Programació I" },
+      { "hora": "18:00", "durada": 60, "nom": "Gimnàs" }
+    ],
+    "dimarts": [
+      { "hora": "10:00", "durada": 90, "nom": "Càlcul" },
+      { "hora": "19:00", "durada": 90, "nom": "EOI Anglès" }
+    ],
+    "dimecres": [
+      { "hora": "09:00", "durada": 120, "nom": "Programació I" },
+      { "hora": "18:00", "durada": 60, "nom": "Gimnàs" }
+    ],
+    "dijous": [
+      { "hora": "10:00", "durada": 90, "nom": "Càlcul" },
+      { "hora": "17:00", "durada": 90, "nom": "Acadèmia de reforç" }
+    ],
+    "divendres": [
+      { "hora": "09:00", "durada": 120, "nom": "Programació I" }
+    ],
+    "dissabte": [],
+    "diumenge": []
+  }
+}

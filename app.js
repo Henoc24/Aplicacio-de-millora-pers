@@ -10,23 +10,6 @@ const SPRINT_END = '2026-09-01';   // objectiu del primer tram
 const BEDTIME_WINDOW_START = '23:30'; // franja objectiu de son: 23:30–00:30
 const BEDTIME_WINDOW_END = '00:30';
 
-const PILLARS = [
-  { key: 'fisic', name: 'Físic', short: 'Fís' },
-  { key: 'fortalesa', name: 'Fortalesa', short: 'For' },
-  { key: 'coneixement', name: 'Coneixement', short: 'Con' },
-  { key: 'comunicacio', name: 'Comunicació', short: 'Com' },
-];
-
-// "Aura" es desagrega en factors concrets en comptes d'un sol número
-// invent (els altres factors originals — físic, disciplina, comunicació —
-// ja es mesuren als seus propis pilars, així que aquí només hi ha el que
-// no es cobreix enlloc més).
-const AURA_FACTORS = [
-  { key: 'aura_grooming', name: 'Grooming / cura de la imatge', short: 'Gro' },
-  { key: 'aura_roba', name: 'Roba / estil', short: 'Rob' },
-  { key: 'aura_confianca', name: 'Confiança / seguretat', short: 'Cnf' },
-];
-
 /* ---------------- State ---------------- */
 
 function defaultState() {
@@ -40,6 +23,11 @@ function defaultState() {
       { key: 'cura', name: 'Cura personal (pell / postura)' },
       { key: 'social', name: 'Interacció social intencionada' },
     ],
+    // Context extern per pilar — de moment només s'usa "fisic" (la rutina).
+    // L'estructura és genèrica perquè altres pilars (p. ex. coneixement) hi
+    // puguin afegir el seu propi context més endavant sense canviar el format.
+    context: { fisic: null },
+    horari: null, // blocs de la setmana (classes, EOI, acadèmia, gimnàs...) — separat del context per pilar perquè abraça tot el dia
   };
 }
 
@@ -185,6 +173,27 @@ function consistencyWindow(key) {
   return count;
 }
 
+function consistencyPattern(key) {
+  // Ordre cronològic: fa 6 dies ... avui (perquè es llegeixi d'esquerra a dreta)
+  const pattern = [];
+  for (let i = 6; i >= 0; i--) {
+    const iso = isoDaysAgo(i);
+    const rec = state.daily[iso];
+    pattern.push(!!(rec && rec[key]));
+  }
+  return pattern;
+}
+
+function renderDotRow(containerId, key) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const pattern = consistencyPattern(key);
+  const count = pattern.filter(Boolean).length;
+  const band = count >= 5 ? 'dot-high' : count >= 3 ? 'dot-mid' : 'dot-low';
+  el.innerHTML = pattern.map(v => `<span class="dot ${v ? 'dot-filled ' + band : ''}"></span>`).join('');
+  el.setAttribute('aria-label', `${count}/7`);
+}
+
 function slugify(str) {
   return str
     .toLowerCase()
@@ -206,18 +215,15 @@ function renderAvui() {
   if (state.habits.length === 0) {
     list.innerHTML = `<li class="history-empty">Encara no tens cap hàbit — afegeix-ne un a "Gestionar hàbits".</li>`;
   } else {
-    list.innerHTML = state.habits.map(h => {
-      const checked = !!rec[h.key];
-      const window7 = consistencyWindow(h.key);
-      return `
-        <li class="habit-item ${checked ? 'checked' : ''}" data-key="${h.key}">
+    list.innerHTML = state.habits.map(h => `
+        <li class="habit-item ${rec[h.key] ? 'checked' : ''}" data-key="${h.key}">
           <div class="habit-main">
-            <button class="habit-check" data-toggle="${h.key}" aria-label="${escapeHtml(h.name)}">${checked ? '✓' : ''}</button>
+            <button class="habit-check" data-toggle="${h.key}" aria-label="${escapeHtml(h.name)}">${rec[h.key] ? '✓' : ''}</button>
             <span class="habit-name">${escapeHtml(h.name)}</span>
           </div>
-          <span class="habit-window mono">${window7}/7</span>
-        </li>`;
-    }).join('');
+          <span class="dot-row" id="dots-${h.key}"></span>
+        </li>`).join('');
+    state.habits.forEach(h => renderDotRow(`dots-${h.key}`, h.key));
   }
 
   list.querySelectorAll('[data-toggle]').forEach(btn => {
@@ -233,13 +239,334 @@ function renderAvui() {
     saveState();
     renderAvui();
   };
-  document.getElementById('sonWindow').textContent = `${consistencyWindow('sonOk')}/7`;
+  renderSleepBar(rec.bedtime);
+  renderDotRow('sonWindow', 'sonOk');
 
   const focusToday = state.focusSessions.filter(s => s.date === today).length;
   document.getElementById('focusTodayCount').textContent = focusToday;
 
   renderHabitManager();
+  renderRoutineToday();
+  renderHorariToday();
+  renderNarrative();
 }
+
+/* ---------------- Context: rutina d'avui (Físic) ---------------- */
+
+const DAY_KEYS = ['diumenge', 'dilluns', 'dimarts', 'dimecres', 'dijous', 'divendres', 'dissabte'];
+
+function todayDayKey() {
+  return DAY_KEYS[new Date().getDay()];
+}
+
+function isValidRoutine(obj) {
+  return !!(obj && typeof obj === 'object' && obj.rutina && typeof obj.rutina === 'object'
+    && DAY_KEYS.some(d => obj.rutina[d]));
+}
+
+function renderRoutineToday() {
+  const empty = document.getElementById('routineEmpty');
+  const today = document.getElementById('routineToday');
+  const routine = state.context && state.context.fisic;
+
+  if (!routine) {
+    empty.hidden = false;
+    today.hidden = true;
+    return;
+  }
+  empty.hidden = true;
+  today.hidden = false;
+
+  const dayData = routine.rutina[todayDayKey()];
+  const label = dayData ? dayData.etiqueta : 'Descans';
+  document.getElementById('routineDayLabel').textContent = label;
+
+  const list = document.getElementById('exerciseList');
+  const exercicis = (dayData && dayData.exercicis) || [];
+  if (exercicis.length === 0) {
+    list.innerHTML = `<li class="routine-rest">Dia de descans a la rutina.</li>`;
+  } else {
+    list.innerHTML = exercicis.map(ex => `
+      <li class="exercise-item">
+        <span>${escapeHtml(ex.nom || '—')}</span>
+        <span class="ex-detail">${ex.series || '–'}×${ex.repeticions || '–'}${ex.ultimPes ? ' · ' + ex.ultimPes + 'kg' : ''}</span>
+      </li>`).join('');
+  }
+
+  // El botó reutilitza l'hàbit "entrenament" que ja existeix — no calia
+  // cap camp nou per marcar la rutina com a feta.
+  const markBtn = document.getElementById('markRoutineDoneBtn');
+  const hasEntrenamentHabit = state.habits.some(h => h.key === 'entrenament');
+  if (exercicis.length > 0 && hasEntrenamentHabit) {
+    markBtn.hidden = false;
+    const done = !!peekDaily(todayISO()).entrenament;
+    markBtn.textContent = done ? 'Entrenament marcat ✓' : 'Marca "Entrenament" com a fet';
+  } else {
+    markBtn.hidden = true;
+  }
+}
+
+document.getElementById('markRoutineDoneBtn')?.addEventListener('click', () => {
+  toggleHabit('entrenament');
+  renderRoutineToday();
+});
+
+document.getElementById('routineFile')?.addEventListener('change', (e) => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      if (!isValidRoutine(parsed)) {
+        alert('Aquest fitxer no té el format esperat (calen "rutina" amb almenys un dia). Revisa l\'exemple.');
+        return;
+      }
+      state.context.fisic = parsed;
+      saveState();
+      renderRoutineToday();
+    } catch (err) {
+      alert('El fitxer no és un JSON vàlid.');
+    } finally {
+      e.target.value = '';
+    }
+  };
+  reader.readAsText(file);
+});
+
+document.getElementById('removeRoutineBtn')?.addEventListener('click', () => {
+  const ok = confirm('Treure la rutina carregada? (Els entrenaments ja registrats no es toquen.)');
+  if (!ok) return;
+  state.context.fisic = null;
+  saveState();
+  renderRoutineToday();
+});
+
+/* ---------------- Horari (blocs del dia — més enllà del gimnàs) ---------------- */
+
+function isValidHorari(obj) {
+  return !!(obj && typeof obj === 'object' && obj.horari && typeof obj.horari === 'object'
+    && DAY_KEYS.some(d => Array.isArray(obj.horari[d])));
+}
+
+function renderHorariToday() {
+  const empty = document.getElementById('horariEmpty');
+  const today = document.getElementById('horariToday');
+  const horari = state.horari;
+
+  if (!horari) {
+    empty.hidden = false;
+    today.hidden = true;
+    return;
+  }
+  empty.hidden = true;
+  today.hidden = false;
+
+  const blocks = [...((horari.horari && horari.horari[todayDayKey()]) || [])]
+    .sort((a, b) => (a.hora || '').localeCompare(b.hora || ''));
+
+  const list = document.getElementById('horariList');
+  if (blocks.length === 0) {
+    list.innerHTML = `<li class="routine-rest">Cap bloc avui.</li>`;
+  } else {
+    list.innerHTML = blocks.map(b => `
+      <li class="exercise-item">
+        <span>${escapeHtml(b.nom || '—')}</span>
+        <span class="ex-detail">${escapeHtml(b.hora || '')}</span>
+      </li>`).join('');
+  }
+}
+
+document.getElementById('horariFile')?.addEventListener('change', (e) => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      if (!isValidHorari(parsed)) {
+        alert('Aquest fitxer no té el format esperat (cal "horari" amb almenys un dia com a llista de blocs). Revisa l\'exemple.');
+        return;
+      }
+      state.horari = parsed;
+      saveState();
+      renderHorariToday();
+    } catch (err) {
+      alert('El fitxer no és un JSON vàlid.');
+    } finally {
+      e.target.value = '';
+    }
+  };
+  reader.readAsText(file);
+});
+
+document.getElementById('removeHorariBtn')?.addEventListener('click', () => {
+  const ok = confirm('Treure l\'horari carregat?');
+  if (!ok) return;
+  state.horari = null;
+  saveState();
+  renderHorariToday();
+});
+
+/* ---- Exportar a .ics (calendari real amb notificacions fiables del sistema) ---- */
+
+const ICS_DAY_CODE = { dilluns: 'MO', dimarts: 'TU', dimecres: 'WE', dijous: 'TH', divendres: 'FR', dissabte: 'SA', diumenge: 'SU' };
+
+function nextDateForDayKey(dayKey) {
+  const targetIdx = DAY_KEYS.indexOf(dayKey); // coincideix amb Date.getDay(): 0=diumenge..6=dissabte
+  const now = new Date();
+  const diff = (targetIdx - now.getDay() + 7) % 7;
+  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diff);
+  return d;
+}
+
+function icsDateTime(date, hh, mm) {
+  return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}T${pad(hh)}${pad(mm)}00`;
+}
+
+function escapeICSText(str) {
+  return String(str).replace(/([,;])/g, '\\$1');
+}
+
+function generateICS() {
+  if (!state.horari || !state.horari.horari) return null;
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//September Personal OS//CA', 'CALSCALE:GREGORIAN'];
+  let n = 0;
+
+  DAY_KEYS.forEach(dayKey => {
+    const blocks = state.horari.horari[dayKey] || [];
+    blocks.forEach(block => {
+      if (!block.hora) return;
+      const [h, m] = block.hora.split(':').map(Number);
+      if (isNaN(h) || isNaN(m)) return;
+      const durMin = block.durada || 60;
+      const startDate = nextDateForDayKey(dayKey);
+      const dtstart = icsDateTime(startDate, h, m);
+      const endTotalMin = h * 60 + m + durMin;
+      const endDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + Math.floor(endTotalMin / 1440));
+      const dtend = icsDateTime(endDate, Math.floor((endTotalMin % 1440) / 60), endTotalMin % 60);
+
+      lines.push('BEGIN:VEVENT');
+      lines.push(`UID:sept-${dayKey}-${n++}@personal-os`);
+      lines.push(`DTSTART:${dtstart}`);
+      lines.push(`DTEND:${dtend}`);
+      lines.push(`RRULE:FREQ=WEEKLY;BYDAY=${ICS_DAY_CODE[dayKey]}`);
+      lines.push(`SUMMARY:${escapeICSText(block.nom || 'Bloc')}`);
+      lines.push('END:VEVENT');
+    });
+  });
+
+  lines.push('END:VCALENDAR');
+  return lines.join('\r\n');
+}
+
+document.getElementById('exportIcsBtn')?.addEventListener('click', () => {
+  const ics = generateICS();
+  if (!ics) {
+    alert('No hi ha horari carregat per exportar.');
+    return;
+  }
+  const blob = new Blob([ics], { type: 'text/calendar' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'september-horari.ics';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+/* ---------------- Context narratiu (Avui) — fets honestos, no correlacions ---------------- */
+//
+// Deliberadament NO és un motor de correlacions/senyals: amb pocs dies d'ús,
+// "detectar patrons" seria inventar-se'ls. Això només diu fets reals ja
+// registrats, en frases, perquè es llegeixin d'un cop en obrir l'app.
+
+function renderNarrative() {
+  const card = document.getElementById('narrativeCard');
+  const list = document.getElementById('narrativeList');
+  const lines = [];
+  const today = todayISO();
+  const yesterday = isoDaysAgo(1);
+
+  // Ahir: resum simple (només si "ahir" ja existeix com a dia complet)
+  const yRec = state.daily[yesterday];
+  if (yRec) {
+    const habitsDone = state.habits.filter(h => yRec[h.key]).length;
+    const yFocus = state.focusSessions.filter(s => s.date === yesterday);
+    const yMinutes = yFocus.reduce((sum, s) => sum + (s.actualMinutes || 0), 0);
+    lines.push(`Ahir: ${habitsDone}/${state.habits.length} hàbits completats, ${yFocus.length} sessions de focus (${yMinutes} min).`);
+  }
+
+  // Dies sense marcar un hàbit concret (només si són ≥2, per no fer soroll cada dia)
+  state.habits.forEach(h => {
+    let gap = 0;
+    for (let i = 0; i < 30; i++) {
+      const rec = state.daily[isoDaysAgo(i)];
+      if (rec && rec[h.key]) break;
+      gap++;
+    }
+    if (gap >= 2 && gap < 30) {
+      lines.push(`Fa ${gap} dies que no marques "${h.name}".`);
+    }
+  });
+
+  // Motiu d'interrupció més freqüent (només amb prou mostra per no ser soroll)
+  const reasonCounts = {};
+  let reasonTotal = 0;
+  state.focusSessions.forEach(s => (s.interruptionReasons || []).forEach(r => {
+    reasonCounts[r] = (reasonCounts[r] || 0) + 1;
+    reasonTotal++;
+  }));
+  if (reasonTotal >= 3) {
+    const top = Object.entries(reasonCounts).sort((a, b) => b[1] - a[1])[0];
+    lines.push(`El motiu d'interrupció més freqüent fins ara: ${REASON_LABEL[top[0]] || top[0]} (${top[1]} de ${reasonTotal}).`);
+  }
+
+  // Decisió de la setmana en curs, si n'hi ha una guardada
+  const currentWeekKey = mondayOfISO(today);
+  const currentWeekRec = state.weeks[currentWeekKey];
+  if (currentWeekRec && currentWeekRec.decision) {
+    lines.push(`Decisió d'aquesta setmana: "${currentWeekRec.decision}".`);
+  }
+
+  if (lines.length === 0) {
+    card.hidden = true;
+    return;
+  }
+  card.hidden = false;
+  list.innerHTML = lines.map(l => `<li>${escapeHtml(l)}</li>`).join('');
+}
+
+// Barra visual 21:00–03:00 amb la franja objectiu (23:30–00:30) marcada,
+// i un punt a on cau l'hora real d'anar a dormir.
+function renderSleepBar(bedtime) {
+  const marker = document.getElementById('sleepBarMarker');
+  const target = document.getElementById('sleepBarTarget');
+  const RANGE_START = 21 * 60;   // 21:00
+  const RANGE_END = 27 * 60;     // 03:00 (del dia següent, expressat com a +24h)
+
+  const toRangeMinutes = (t) => {
+    const mins = toMinutes(t);
+    return mins < RANGE_START ? mins + 24 * 60 : mins; // si és matinada, sumem 24h perquè quedi després de les 21:00
+  };
+  const pct = (mins) => Math.min(100, Math.max(0, ((mins - RANGE_START) / (RANGE_END - RANGE_START)) * 100));
+
+  const targetStart = pct(toRangeMinutes(BEDTIME_WINDOW_START));
+  const targetEnd = pct(toRangeMinutes('24:30')); // 00:30 expressat en el mateix eix +24h
+  target.style.left = `${targetStart}%`;
+  target.style.width = `${targetEnd - targetStart}%`;
+
+  if (bedtime) {
+    marker.hidden = false;
+    marker.style.left = `${pct(toRangeMinutes(bedtime))}%`;
+    marker.classList.toggle('sleep-bar-marker-ok', isBedtimeOk(bedtime));
+  } else {
+    marker.hidden = true;
+  }
+}
+
 
 function renderHabitManager() {
   const ul = document.getElementById('habitManageList');
@@ -310,6 +637,7 @@ let focusTimer = {
   subject: '',
   objective: '',
   interruptions: 0,
+  interruptionReasons: [],
   intervalId: null,
 };
 
@@ -320,11 +648,34 @@ function renderFocus() {
   document.getElementById('focusLog').hidden = !focusTimer.pendingLog;
 
   renderSubjectSummary();
+  renderReasonSummary();
   renderFocusHistory();
 }
 
 const DIFFICULTY_LABEL = { easy: 'Fàcil', normal: 'Normal', hard: 'Difícil' };
 const COMPREHENSION_DOT = { green: '🟢', yellow: '🟡', red: '🔴' };
+const REASON_LABEL = { mobil: 'Mòbil', soroll: 'Soroll', cansament: 'Cansament', tasca_poc_clara: 'Tasca poc clara', altra: 'Altra' };
+
+function renderReasonSummary() {
+  const ul = document.getElementById('reasonSummary');
+  const counts = {};
+  let total = 0;
+  state.focusSessions.forEach(s => {
+    (s.interruptionReasons || []).forEach(r => {
+      counts[r] = (counts[r] || 0) + 1;
+      total++;
+    });
+  });
+  if (total === 0) {
+    ul.innerHTML = `<li class="history-empty">Encara no hi ha motius registrats — apareixen quan tapes un motiu just després de prémer "he perdut el focus".</li>`;
+    return;
+  }
+  const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  ul.innerHTML = entries.map(([reason, count]) => `
+    <li class="history-item">
+      <div class="h-top"><span>${REASON_LABEL[reason] || reason}</span><span>${count} · ${Math.round((count / total) * 100)}%</span></div>
+    </li>`).join('');
+}
 
 function renderSubjectSummary() {
   const ul = document.getElementById('subjectSummary');
@@ -387,6 +738,7 @@ document.getElementById('startFocusBtn')?.addEventListener('click', () => {
     plannedMinutes: duration,
     subject, objective,
     interruptions: 0,
+    interruptionReasons: [],
     startedAt: Date.now(),
     intervalId: null,
     pendingLog: false,
@@ -395,10 +747,19 @@ document.getElementById('startFocusBtn')?.addEventListener('click', () => {
   document.getElementById('focusRunningSubject').textContent = subject || 'Sessió de focus';
   document.getElementById('focusRunningObjective').textContent = objective || '';
   document.getElementById('interruptionCount').textContent = '(0)';
+  document.getElementById('reasonChips').hidden = true;
+  document.querySelectorAll('#reasonChips .chip').forEach(c => c.classList.remove('chip-tapped'));
   updateTimerDisplay();
 
   focusTimer.intervalId = setInterval(tickFocus, 1000);
   renderFocus();
+});
+
+document.getElementById('quickStart2Btn')?.addEventListener('click', () => {
+  // "Només 2 minuts": cap decisió prèvia, comença ja. Reutilitza el mateix
+  // flux/validació que el botó normal — només fixem la durada abans.
+  document.getElementById('focusDuration').value = '2';
+  document.getElementById('startFocusBtn').click();
 });
 
 function tickFocus() {
@@ -413,15 +774,34 @@ function tickFocus() {
   updateTimerDisplay();
 }
 
+const TIMER_RING_CIRCUMFERENCE = 2 * Math.PI * 54;
+
 function updateTimerDisplay() {
   const m = Math.floor(focusTimer.remainingSeconds / 60);
   const s = focusTimer.remainingSeconds % 60;
   document.getElementById('timerDisplay').textContent = `${pad(m)}:${pad(s)}`;
+
+  const totalSeconds = focusTimer.plannedMinutes * 60;
+  const fraction = totalSeconds > 0 ? Math.max(0, Math.min(1, focusTimer.remainingSeconds / totalSeconds)) : 0;
+  const ring = document.getElementById('timerRingProgress');
+  if (ring) {
+    ring.style.strokeDasharray = `${TIMER_RING_CIRCUMFERENCE}`;
+    ring.style.strokeDashoffset = `${TIMER_RING_CIRCUMFERENCE * (1 - fraction)}`;
+  }
 }
 
 document.getElementById('lostFocusBtn')?.addEventListener('click', () => {
   focusTimer.interruptions++;
   document.getElementById('interruptionCount').textContent = `(${focusTimer.interruptions})`;
+  document.getElementById('reasonChips').hidden = false;
+});
+
+document.querySelectorAll('#reasonChips .chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    focusTimer.interruptionReasons.push(chip.dataset.reason);
+    chip.classList.add('chip-tapped');
+    setTimeout(() => chip.classList.remove('chip-tapped'), 400);
+  });
 });
 
 document.getElementById('pauseFocusBtn')?.addEventListener('click', (e) => {
@@ -457,7 +837,7 @@ function setSegmented(containerId, selectedVal) {
   });
 }
 
-document.querySelectorAll('#completedSeg .seg-btn, #comprehensionSeg .seg-btn, #difficultySeg .seg-btn').forEach(btn => {
+document.querySelectorAll('#completedSeg .seg-btn, #comprehensionSeg .seg-btn, #difficultySeg .seg-btn, #decisionOutcomeSeg .seg-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const parent = btn.parentElement;
     parent.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('selected'));
@@ -483,13 +863,15 @@ document.getElementById('saveFocusLogBtn')?.addEventListener('click', () => {
     comprehension: comprehensionBtn ? comprehensionBtn.dataset.val : null,
     difficulty: difficultyBtn ? difficultyBtn.dataset.val : null,
     interruptions,
+    interruptionReasons: [...focusTimer.interruptionReasons],
   });
   saveState();
 
-  focusTimer = { running: false, paused: false, remainingSeconds: 0, plannedMinutes: 0, subject: '', objective: '', interruptions: 0, intervalId: null, pendingLog: false };
+  focusTimer = { running: false, paused: false, remainingSeconds: 0, plannedMinutes: 0, subject: '', objective: '', interruptions: 0, interruptionReasons: [], intervalId: null, pendingLog: false };
   document.getElementById('focusSubject').value = '';
   document.getElementById('focusObjective').value = '';
   document.getElementById('focusDuration').value = '';
+  document.getElementById('reasonChips').hidden = true;
 
   showScreen('avui');
 });
@@ -499,12 +881,21 @@ document.getElementById('saveFocusLogBtn')?.addEventListener('click', () => {
 function blankWeekRecord() {
   return {
     weight: null,
-    ratings: {},
     social: null,
-    phone: { util: null, oci: null, automatic: null },
     comms: { newPeople: null, spokeUp: null },
+    phoneUsage: null,
+    decision: '',            // el que decideixes fer diferent la setmana vinent
+    decisionOutcome: null,   // 'kept' | 'modified' | 'dropped' — com ha anat la decisió de la setmana ANTERIOR
     notes: '',
   };
+}
+
+function findPreviousDecision(weekKey) {
+  const priorKeys = Object.keys(state.weeks)
+    .filter(k => k < weekKey && state.weeks[k].decision)
+    .sort()
+    .reverse();
+  return priorKeys.length ? state.weeks[priorKeys[0]].decision : null;
 }
 
 function peekWeekRecord(weekKey) {
@@ -518,24 +909,78 @@ function getWeekRecord(weekKey) {
   return state.weeks[weekKey];
 }
 
-function renderSliderGroup(containerId, items, ratings) {
-  const container = document.getElementById(containerId);
-  container.innerHTML = items.map(p => {
-    const val = ratings[p.key] ?? 5;
-    return `
-      <div class="pillar-row">
-        <div class="field-top">
-          <label>${p.name}</label>
-          <span class="pillar-val mono" id="pval-${p.key}">${val}</span>
-        </div>
-        <input type="range" min="1" max="10" value="${val}" data-pillar="${p.key}">
-      </div>`;
-  }).join('');
-  container.querySelectorAll('input[type="range"]').forEach(input => {
-    input.addEventListener('input', () => {
-      document.getElementById(`pval-${input.dataset.pillar}`).textContent = input.value;
-    });
-  });
+/* ---- Lectures derivades dels pilars (a partir de dades ja registrades, no de sliders) ---- */
+
+function weekDateRange(weekKey) {
+  const start = new Date(weekKey + 'T00:00:00');
+  const end = new Date(start);
+  end.setDate(end.getDate() + 6);
+  return { start: weekKey, end: toISODate(end) };
+}
+
+function focusStatsForWeek(weekKey) {
+  const { start, end } = weekDateRange(weekKey);
+  const sessions = state.focusSessions.filter(s => s.date >= start && s.date <= end);
+  const minutes = sessions.reduce((sum, s) => sum + (s.actualMinutes || 0), 0);
+  return { count: sessions.length, minutes };
+}
+
+function habitConsistencyByKey(key) {
+  if (!state.habits.some(h => h.key === key)) return null;
+  return consistencyWindow(key);
+}
+
+function averageHabitsConsistency() {
+  if (state.habits.length === 0) return null;
+  const total = state.habits.reduce((sum, h) => sum + consistencyWindow(h.key), 0);
+  return total / state.habits.length;
+}
+
+function weightTrendFor(weekKey, liveWeight) {
+  if (!liveWeight) return null;
+  const priorKeys = Object.keys(state.weeks)
+    .filter(k => k < weekKey && state.weeks[k].weight != null)
+    .sort()
+    .reverse();
+  if (priorKeys.length === 0) return null;
+  const priorWeight = state.weeks[priorKeys[0]].weight;
+  const diff = liveWeight - priorWeight;
+  if (diff > 0.2) return 'up';
+  if (diff < -0.2) return 'down';
+  return 'flat';
+}
+
+function renderPillarReadouts(weekKey, liveWeight) {
+  const container = document.getElementById('pillarReadouts');
+  const trendArrow = { up: '↑', down: '↓', flat: '→' };
+
+  const entrenamentCount = habitConsistencyByKey('entrenament');
+  const trend = weightTrendFor(weekKey, liveWeight);
+  const avgHabits = averageHabitsConsistency();
+  const focusStats = focusStatsForWeek(weekKey);
+
+  const items = [
+    {
+      label: 'Físic',
+      value: entrenamentCount !== null
+        ? `Entrenaments ${entrenamentCount}/7${trend ? ' · pes ' + trendArrow[trend] : ''}`
+        : (trend ? `Pes ${trendArrow[trend]}` : '—'),
+    },
+    {
+      label: 'Fortalesa',
+      value: avgHabits !== null ? `Consistència hàbits ${avgHabits.toFixed(1)}/7` : '—',
+    },
+    {
+      label: 'Coneixement',
+      value: `${focusStats.count} sessions · ${focusStats.minutes} min`,
+    },
+  ];
+
+  container.innerHTML = items.map(it => `
+    <div class="readout-item">
+      <div class="readout-label">${it.label}</div>
+      <div class="readout-value mono">${it.value}</div>
+    </div>`).join('');
 }
 
 function renderSetmana() {
@@ -545,15 +990,27 @@ function renderSetmana() {
 
   document.getElementById('weightInput').value = rec.weight ?? '';
   document.getElementById('socialInput').value = rec.social ?? '';
-  document.getElementById('phoneUtil').value = rec.phone.util ?? '';
-  document.getElementById('phoneOci').value = rec.phone.oci ?? '';
-  document.getElementById('phoneAuto').value = rec.phone.automatic ?? '';
   document.getElementById('commsNewPeople').value = (rec.comms && rec.comms.newPeople) ?? '';
   document.getElementById('commsSpokeUp').value = (rec.comms && rec.comms.spokeUp) ?? '';
+  document.getElementById('nextDecision').value = rec.decision ?? '';
   document.getElementById('weekNotes').value = rec.notes ?? '';
+  setSegmented('phoneUsageSeg', rec.phoneUsage || null);
 
-  renderSliderGroup('pillarRatings', PILLARS, rec.ratings);
-  renderSliderGroup('auraRatings', AURA_FACTORS, rec.ratings);
+  const previousDecision = findPreviousDecision(weekKey);
+  const reviewCard = document.getElementById('decisionReviewCard');
+  if (previousDecision) {
+    reviewCard.hidden = false;
+    document.getElementById('previousDecisionText').textContent = `"${previousDecision}"`;
+    setSegmented('decisionOutcomeSeg', rec.decisionOutcome || null);
+  } else {
+    reviewCard.hidden = true;
+  }
+
+  const weightInput = document.getElementById('weightInput');
+  renderPillarReadouts(weekKey, parseFloat(weightInput.value) || null);
+  weightInput.oninput = () => renderPillarReadouts(weekKey, parseFloat(weightInput.value) || null);
+
+  renderDotRow('auraGroomingDots', 'cura');
 
   renderWeekHistory(weekKey);
 }
@@ -565,17 +1022,32 @@ function renderWeekHistory(currentWeekKey) {
     ul.innerHTML = `<li class="history-empty">Encara no hi ha setmanes anteriors.</li>`;
     return;
   }
-  const allItems = [...PILLARS, ...AURA_FACTORS];
+  const outcomeLabel = { kept: 'mantinguda', modified: 'modificada', dropped: 'eliminada' };
   ul.innerHTML = keys.map(k => {
     const w = state.weeks[k];
-    const ratingsStr = allItems.map(p => `${p.short} ${w.ratings[p.key] ?? '–'}`).join(' · ');
+    const parts = [];
+    if (w.weight) parts.push(`${w.weight} kg`);
+    if (w.comms) parts.push(`${w.comms.newPeople ?? 0} pers. noves`);
+    if (w.social != null) parts.push(`${w.social} interaccions`);
+    if (w.auraRoba != null) parts.push(`estil ${w.auraRoba}/7`);
+    if (w.phoneUsage) parts.push(`mòbil: ${w.phoneUsage}`);
+    if (w.decisionOutcome) parts.push(`decisió anterior: ${outcomeLabel[w.decisionOutcome]}`);
+    const decisionLine = w.decision ? `<div class="h-main" style="margin-top:4px;">→ ${escapeHtml(w.decision)}</div>` : '';
     return `
       <li class="history-item">
-        <div class="h-top"><span>Setmana ${fmtDateShort(k)}</span><span>${w.weight ? w.weight + ' kg' : ''}</span></div>
-        <div class="h-main mono">${ratingsStr}</div>
+        <div class="h-top"><span>Setmana ${fmtDateShort(k)}</span></div>
+        <div class="h-main mono">${parts.length ? parts.join(' · ') : '—'}</div>
+        ${decisionLine}
       </li>`;
   }).join('');
 }
+
+document.querySelectorAll('#phoneUsageSeg .seg-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#phoneUsageSeg .seg-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+  });
+});
 
 document.getElementById('saveWeekBtn')?.addEventListener('click', () => {
   const weekKey = mondayOfISO(todayISO());
@@ -583,17 +1055,15 @@ document.getElementById('saveWeekBtn')?.addEventListener('click', () => {
 
   rec.weight = parseFloat(document.getElementById('weightInput').value) || null;
   rec.social = parseInt(document.getElementById('socialInput').value, 10) || 0;
-  rec.phone.util = parseFloat(document.getElementById('phoneUtil').value) || 0;
-  rec.phone.oci = parseFloat(document.getElementById('phoneOci').value) || 0;
-  rec.phone.automatic = parseFloat(document.getElementById('phoneAuto').value) || 0;
   rec.comms = rec.comms || { newPeople: null, spokeUp: null };
   rec.comms.newPeople = parseInt(document.getElementById('commsNewPeople').value, 10) || 0;
   rec.comms.spokeUp = parseInt(document.getElementById('commsSpokeUp').value, 10) || 0;
+  const phoneBtn = document.querySelector('#phoneUsageSeg .seg-btn.selected');
+  rec.phoneUsage = phoneBtn ? phoneBtn.dataset.val : null;
+  rec.decision = document.getElementById('nextDecision').value.trim();
+  const outcomeBtn = document.querySelector('#decisionOutcomeSeg .seg-btn.selected');
+  rec.decisionOutcome = outcomeBtn ? outcomeBtn.dataset.val : null;
   rec.notes = document.getElementById('weekNotes').value;
-
-  document.querySelectorAll('.pillar-ratings input[type="range"]').forEach(input => {
-    rec.ratings[input.dataset.pillar] = parseInt(input.value, 10);
-  });
 
   saveState();
   renderSetmana();
