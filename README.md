@@ -8,6 +8,9 @@ en aquesta versió (per això existeix l'exportar/importar, més avall).
 
 ## Què inclou aquesta V0
 
+- **Inici** — pantalla d'estat (no d'acció): el context narratiu, els
+  pilars llegits de dades reals, i la decisió d'aquesta setmana, tot
+  d'un cop en obrir l'app. És la pestanya per defecte.
 - **Avui** — hàbits (editables des de la mateixa app) amb finestra de
   consistència **en punts visuals** (no text "X/7") acolorits segons el
   valor. Son com a targeta pròpia amb **barra visual** de la franja

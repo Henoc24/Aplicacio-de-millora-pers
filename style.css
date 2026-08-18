@@ -696,31 +696,35 @@ input[type="file"] {
   background: rgba(20, 23, 28, 0.92);
   backdrop-filter: blur(10px);
   border-top: 1px solid var(--border);
-  padding-bottom: var(--safe-bottom);
+  padding: 8px 8px calc(8px + var(--safe-bottom));
+  gap: 4px;
 }
 
 .tab {
   flex: 1;
   background: none;
   border: none;
-  padding: 12px 0 10px;
-  font-size: 12.5px;
+  border-radius: 12px;
+  padding: 8px 0 7px;
+  font-size: 11.5px;
   color: var(--text-muted);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
   font-weight: 600;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
-.tab-mark {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text-muted);
+.tab-icon {
+  width: 21px;
+  height: 21px;
 }
 
-.tab.active { color: var(--accent); }
-.tab.active .tab-mark { color: var(--accent); }
+.tab.active {
+  color: var(--accent);
+  background: rgba(227, 168, 87, 0.12);
+}
 
 /* ===== Responsive: desktop mode preview ===== */
 @media (min-width: 560px) {

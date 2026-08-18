@@ -35,14 +35,29 @@
 
   <main id="screens">
 
-    <!-- AVUI -->
-    <section id="screen-avui" class="screen active">
-      <h1 class="screen-title">Avui</h1>
+    <!-- INICI (Home) -->
+    <section id="screen-inici" class="screen active">
+      <h1 class="screen-title">Inici</h1>
 
       <div class="card" id="narrativeCard" hidden>
         <div class="card-label">Context</div>
         <ul class="narrative-list" id="narrativeList"></ul>
       </div>
+
+      <div class="card">
+        <div class="card-label">Pilars — estat actual</div>
+        <div class="readout-grid" id="iniciPillarReadouts"></div>
+      </div>
+
+      <div class="card" id="iniciDecisionCard" hidden>
+        <div class="card-label">Decisió d'aquesta setmana</div>
+        <p class="decision-text" id="iniciDecisionText"></p>
+      </div>
+    </section>
+
+    <!-- AVUI -->
+    <section id="screen-avui" class="screen">
+      <h1 class="screen-title">Avui</h1>
 
       <div class="card">
         <div class="card-label">Hàbits</div>
@@ -311,14 +326,21 @@
   </main>
 
   <nav class="tabbar">
-    <button class="tab active" data-screen="avui">
-      <span class="tab-mark">01</span>Avui
+    <button class="tab active" data-screen="inici">
+      <svg class="tab-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="2" width="7" height="7" rx="1"/><rect x="11" y="2" width="7" height="7" rx="1"/><rect x="2" y="11" width="7" height="7" rx="1"/><rect x="11" y="11" width="7" height="7" rx="1"/></svg>
+      <span>Inici</span>
+    </button>
+    <button class="tab" data-screen="avui">
+      <svg class="tab-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="10" r="7.3"/><path d="M6.5 10.2l2.4 2.4L14 7.4"/></svg>
+      <span>Avui</span>
     </button>
     <button class="tab" data-screen="focus">
-      <span class="tab-mark">02</span>Focus
+      <svg class="tab-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="10" r="7.3"/><circle cx="10" cy="10" r="2.3" fill="currentColor" stroke="none"/></svg>
+      <span>Focus</span>
     </button>
     <button class="tab" data-screen="setmana">
-      <span class="tab-mark">03</span>Setmana
+      <svg class="tab-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.3" y="4" width="15.4" height="13.3" rx="1.5"/><path d="M2.3 8.2h15.4"/><path d="M6.5 2.3v3.4M13.5 2.3v3.4"/></svg>
+      <span>Setmana</span>
     </button>
   </nav>
 

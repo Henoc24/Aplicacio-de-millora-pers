@@ -107,6 +107,7 @@ function showScreen(name) {
   document.querySelectorAll('.tab').forEach(t => {
     t.classList.toggle('active', t.dataset.screen === name);
   });
+  if (name === 'inici') renderInici();
   if (name === 'avui') renderAvui();
   if (name === 'focus') renderFocus();
   if (name === 'setmana') renderSetmana();
@@ -248,7 +249,25 @@ function renderAvui() {
   renderHabitManager();
   renderRoutineToday();
   renderHorariToday();
+}
+
+/* ---------------- Inici (Home) — vista d'estat, no d'acció ---------------- */
+
+function renderInici() {
   renderNarrative();
+
+  const today = todayISO();
+  const currentWeekKey = mondayOfISO(today);
+  renderPillarReadouts(currentWeekKey, null, 'iniciPillarReadouts');
+
+  const currentWeekRec = state.weeks[currentWeekKey];
+  const decisionCard = document.getElementById('iniciDecisionCard');
+  if (currentWeekRec && currentWeekRec.decision) {
+    decisionCard.hidden = false;
+    document.getElementById('iniciDecisionText').textContent = `"${currentWeekRec.decision}"`;
+  } else {
+    decisionCard.hidden = true;
+  }
 }
 
 /* ---------------- Context: rutina d'avui (Físic) ---------------- */
@@ -950,8 +969,8 @@ function weightTrendFor(weekKey, liveWeight) {
   return 'flat';
 }
 
-function renderPillarReadouts(weekKey, liveWeight) {
-  const container = document.getElementById('pillarReadouts');
+function renderPillarReadouts(weekKey, liveWeight, containerId) {
+  const container = document.getElementById(containerId || 'pillarReadouts');
   const trendArrow = { up: '↑', down: '↓', flat: '→' };
 
   const entrenamentCount = habitConsistencyByKey('entrenament');
@@ -1134,5 +1153,5 @@ document.addEventListener('DOMContentLoaded', () => {
   registerServiceWorker();
   renderHeader();
   setInterval(renderHeader, 30000);
-  renderAvui();
+  renderInici();
 });
