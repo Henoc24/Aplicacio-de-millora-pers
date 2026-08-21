@@ -6,6 +6,26 @@ local, sense comptes ni backend. Totes les dades es guarden al
 dades del navegador, es perden. No hi ha sincronització entre dispositius
 en aquesta versió (per això existeix l'exportar/importar, més avall).
 
+## Direcció visual (18/8 — reescriptura completa)
+
+Minimalisme editorial fosc, inspirat en Linear/Arc/Apple Health, no en
+apps de hàbits amb colorets. Decisions concretes:
+
+- **Un sol accent** (ambre) per accions normals; el verd-blau es
+  reserva EXCLUSIVAMENT per Focus, perquè aquell mode se senti
+  diferenciat — no és un segon color decoratiu.
+- **Targetes només quan aporten alguna cosa** (decisions, Focus). La
+  resta són seccions sense caixa — etiqueta + contingut + espai, no
+  "card-in-card" per a tot.
+- **Sense gradients ni glow.** Una sola ombra molt subtil, usada poc.
+- Escala d'espaiat i de radi consistent; vores com a línies fines
+  (`rgba` baixa opacitat), no colors sòlids.
+- **Inici** redissenyat com a resum d'estat (data, 3 xifres del dia,
+  pilars, decisió) — no una llista de targetes.
+- **Focus** dividit en 3 moments visualment diferenciats: abans
+  (formulari mínim), durant (l'anell i el temps dominen, res més), i
+  després (el temps real com a xifra gran, no un input més).
+
 ## Què inclou aquesta V0
 
 - **Inici** — pantalla d'estat (no d'acció): el context narratiu, els

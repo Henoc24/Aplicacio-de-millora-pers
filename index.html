@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>September — Personal OS</title>
-<meta name="theme-color" content="#14171C">
+<meta name="theme-color" content="#121316">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -37,19 +37,24 @@
 
     <!-- INICI (Home) -->
     <section id="screen-inici" class="screen active">
-      <h1 class="screen-title">Inici</h1>
+      <div class="hero-block">
+        <div class="hero-eyebrow" id="iniciDateLine">—</div>
+        <h1 class="hero-title">Com estàs avui</h1>
+      </div>
 
-      <div class="card" id="narrativeCard" hidden>
-        <div class="card-label">Context</div>
+      <div class="stat-row" id="iniciSnapshot"></div>
+
+      <div class="section" id="narrativeCard" hidden>
+        <div class="section-label">Context</div>
         <ul class="narrative-list" id="narrativeList"></ul>
       </div>
 
-      <div class="card">
-        <div class="card-label">Pilars — estat actual</div>
+      <div class="section">
+        <div class="section-label">Pilars</div>
         <div class="readout-grid" id="iniciPillarReadouts"></div>
       </div>
 
-      <div class="card" id="iniciDecisionCard" hidden>
+      <div class="card card-decision" id="iniciDecisionCard" hidden>
         <div class="card-label">Decisió d'aquesta setmana</div>
         <p class="decision-text" id="iniciDecisionText"></p>
       </div>
@@ -59,13 +64,13 @@
     <section id="screen-avui" class="screen">
       <h1 class="screen-title">Avui</h1>
 
-      <div class="card">
-        <div class="card-label">Hàbits</div>
+      <div class="section">
+        <div class="section-label">Hàbits</div>
         <ul id="habitList" class="habit-list"></ul>
       </div>
 
-      <div class="card">
-        <div class="card-label">Rutina d'avui</div>
+      <div class="section">
+        <div class="section-label">Rutina d'avui</div>
         <div id="routineEmpty">
           <p class="hint-text" style="margin-top:0;">Sense rutina carregada. Puja un JSON amb la teva rutina setmanal.</p>
           <input type="file" id="routineFile" accept="application/json">
@@ -80,8 +85,8 @@
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-label">Horari</div>
+      <div class="section">
+        <div class="section-label">Horari</div>
         <div id="horariEmpty">
           <p class="hint-text" style="margin-top:0;">Sense horari carregat. Puja un JSON amb els blocs de la teva setmana (classes, EOI, acadèmia, gimnàs...).</p>
           <input type="file" id="horariFile" accept="application/json">
@@ -92,12 +97,12 @@
             <button class="remove-btn" id="removeHorariBtn" aria-label="Treure l'horari">✕</button>
             <button class="btn btn-ghost btn-compact" id="exportIcsBtn">Exportar a calendari (.ics)</button>
           </div>
-          <p class="hint-text">Importa aquest .ics al Calendari del mòbil perquè les notificacions les faci el sistema, no la PWA (no és fiable fer-ho des d'aquí — explicat al README).</p>
+          <p class="hint-text">Importa aquest .ics al Calendari del mòbil perquè les notificacions les faci el sistema, no la PWA.</p>
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-label">Son</div>
+      <div class="section">
+        <div class="section-label">Son</div>
         <div class="row">
           <label for="bedtimeInput" class="row-label">Anit vaig anar a dormir a les</label>
           <input type="time" id="bedtimeInput">
@@ -113,8 +118,8 @@
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-label">Gestionar hàbits</div>
+      <div class="section">
+        <div class="section-label">Gestionar hàbits</div>
         <ul id="habitManageList" class="manage-list"></ul>
         <div class="add-habit-row">
           <input type="text" id="newHabitName" placeholder="Nom del nou hàbit">
@@ -122,10 +127,12 @@
         </div>
       </div>
 
-      <div class="card focus-card">
-        <div class="card-label">Focus</div>
+      <div class="card card-cta">
         <div class="row">
-          <div class="row-label">Sessions completades avui</div>
+          <div>
+            <div class="card-label" style="margin-bottom:2px;">Focus</div>
+            <div class="cta-sub" id="focusTodayCountLabel">0 sessions avui</div>
+          </div>
           <div class="row-value mono" id="focusTodayCount">0</div>
         </div>
         <button class="btn btn-accent" id="goFocusBtn">Començar sessió de focus</button>
@@ -136,8 +143,7 @@
     <section id="screen-focus" class="screen">
       <h1 class="screen-title">Focus</h1>
 
-      <div id="focusSetup" class="card">
-        <div class="card-label">Nova sessió</div>
+      <div id="focusSetup" class="card card-focus-setup">
         <div class="field">
           <label for="focusSubject">Assignatura / tema</label>
           <input type="text" id="focusSubject" placeholder="p. ex. Càlcul">
@@ -151,10 +157,10 @@
           <input type="number" id="focusDuration" min="1" max="180" step="5" placeholder="p. ex. 25">
         </div>
         <button class="btn btn-accent2" id="startFocusBtn">Començar</button>
-        <button class="btn btn-ghost btn-quickstart" id="quickStart2Btn">O comença ja — només 2 minuts, sense pensar-hi més</button>
+        <button class="link-btn" id="quickStart2Btn">o comença ja — només 2 minuts</button>
       </div>
 
-      <div id="focusRunning" class="card focus-running" hidden>
+      <div id="focusRunning" class="focus-running" hidden>
         <div class="focus-meta">
           <div id="focusRunningSubject" class="focus-subject">—</div>
           <div id="focusRunningObjective" class="focus-objective">—</div>
@@ -166,7 +172,11 @@
           </svg>
           <div class="timer" id="timerDisplay">00:00</div>
         </div>
-        <button class="btn btn-warn" id="lostFocusBtn">He perdut el focus <span id="interruptionCount" class="mono">(0)</span></button>
+        <div class="focus-controls">
+          <button class="btn btn-ghost" id="pauseFocusBtn">Pausa</button>
+          <button class="btn btn-ghost" id="endFocusBtn">Acabar</button>
+        </div>
+        <button class="link-btn link-btn-warn" id="lostFocusBtn">He perdut el focus <span id="interruptionCount" class="mono">(0)</span></button>
         <div class="reason-chips" id="reasonChips" hidden>
           <span class="reason-chips-label">Per què? (opcional)</span>
           <div class="chip-row">
@@ -177,26 +187,24 @@
             <button type="button" class="chip" data-reason="altra">Altra</button>
           </div>
         </div>
-        <div class="focus-controls">
-          <button class="btn btn-ghost" id="pauseFocusBtn">Pausa</button>
-          <button class="btn btn-ghost" id="endFocusBtn">Acabar</button>
-        </div>
       </div>
 
-      <div id="focusLog" class="card" hidden>
-        <div class="card-label">Registre de la sessió</div>
-        <div class="field">
-          <label for="logMinutes">Temps real (minuts)</label>
-          <input type="number" id="logMinutes" min="0" max="300">
+      <div id="focusLog" class="card card-focus-log" hidden>
+        <div class="log-hero">
+          <div class="log-hero-value" id="logMinutesDisplay">0</div>
+          <div class="log-hero-label">minuts reals</div>
+          <button type="button" class="link-btn" id="editMinutesToggle">editar</button>
+          <input type="number" id="logMinutes" min="0" max="300" hidden>
         </div>
-        <div class="field">
+
+        <div class="log-question">
           <label>Tasca completada?</label>
           <div class="segmented" id="completedSeg">
             <button type="button" class="seg-btn" data-val="true">Sí</button>
             <button type="button" class="seg-btn" data-val="false">No</button>
           </div>
         </div>
-        <div class="field">
+        <div class="log-question">
           <label>Comprensió</label>
           <div class="segmented" id="comprehensionSeg">
             <button type="button" class="seg-btn" data-val="green">🟢</button>
@@ -204,7 +212,7 @@
             <button type="button" class="seg-btn" data-val="red">🔴</button>
           </div>
         </div>
-        <div class="field">
+        <div class="log-question">
           <label>Dificultat</label>
           <div class="segmented" id="difficultySeg">
             <button type="button" class="seg-btn" data-val="easy">Fàcil</button>
@@ -212,25 +220,25 @@
             <button type="button" class="seg-btn" data-val="hard">Difícil</button>
           </div>
         </div>
-        <div class="field">
+        <div class="log-question">
           <label for="logInterruptions">Interrupcions</label>
-          <input type="number" id="logInterruptions" min="0" max="50">
+          <input type="number" id="logInterruptions" min="0" max="50" class="log-small-input">
         </div>
         <button class="btn btn-accent" id="saveFocusLogBtn">Guardar</button>
       </div>
 
-      <div class="card">
-        <div class="card-label">Per assignatura</div>
+      <div class="section">
+        <div class="section-label">Per assignatura</div>
         <ul id="subjectSummary" class="history-list"></ul>
       </div>
 
-      <div class="card">
-        <div class="card-label">Motius d'interrupció</div>
+      <div class="section">
+        <div class="section-label">Motius d'interrupció</div>
         <ul id="reasonSummary" class="history-list"></ul>
       </div>
 
-      <div class="card">
-        <div class="card-label">Sessions recents</div>
+      <div class="section">
+        <div class="section-label">Sessions recents</div>
         <ul id="focusHistory" class="history-list"></ul>
       </div>
     </section>
@@ -239,7 +247,7 @@
     <section id="screen-setmana" class="screen">
       <h1 class="screen-title">Setmana</h1>
 
-      <div class="card" id="decisionReviewCard" hidden>
+      <div class="card card-decision" id="decisionReviewCard" hidden>
         <div class="card-label">Decisió de la setmana passada</div>
         <p class="decision-text" id="previousDecisionText"></p>
         <div class="segmented" id="decisionOutcomeSeg">
@@ -249,18 +257,18 @@
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-label" id="weekLabel">Revisió de la setmana</div>
+      <div class="section">
+        <div class="section-label" id="weekLabel">Revisió de la setmana</div>
 
         <div class="field">
           <label for="weightInput">Pes (kg)</label>
           <input type="number" id="weightInput" step="0.1" min="30" max="200">
         </div>
 
-        <div class="card-label sub">Pilars — lectura de les dades ja registrades</div>
+        <div class="section-label sub">Pilars — lectura de les dades ja registrades</div>
         <div class="readout-grid" id="pillarReadouts"></div>
 
-        <div class="card-label sub">Comunicació — accions concretes</div>
+        <div class="section-label sub">Comunicació — accions concretes</div>
         <div class="phone-grid" style="grid-template-columns: 1fr 1fr;">
           <div class="field">
             <label for="commsNewPeople">Persones noves amb qui vaig parlar</label>
@@ -272,19 +280,19 @@
           </div>
         </div>
 
-        <div class="card-label sub">Aura — factors concrets</div>
+        <div class="section-label sub">Aura — factors concrets</div>
         <div class="row">
           <span class="row-label">Grooming (rutina de cura personal)</span>
           <span class="dot-row" id="auraGroomingDots"></span>
         </div>
-        <p class="hint-text">Aura no demana res més directament: roba/estil, confiança i disciplina ja es veuen als pilars d'aquí dalt (Comunicació i Fortalesa). Sumar-ho tot en un "índex" seria exactament la puntuació inventada que vam treure dels sliders — així que no ho fem.</p>
+        <p class="hint-text">Confiança i disciplina ja es veuen als pilars d'aquí dalt — no calia duplicar-los en un índex nou.</p>
 
         <div class="field">
           <label for="socialInput">Interaccions socials intencionades</label>
           <input type="number" id="socialInput" min="0" max="50">
         </div>
 
-        <div class="card-label sub">Mòbil</div>
+        <div class="section-label sub">Mòbil</div>
         <div class="field">
           <label>Com ha estat el mòbil aquesta setmana, en conjunt?</label>
           <div class="segmented" id="phoneUsageSeg">
@@ -294,7 +302,7 @@
           </div>
         </div>
 
-        <div class="card-label sub">Decisió per a la setmana vinent</div>
+        <div class="section-label sub">Decisió per a la setmana vinent</div>
         <div class="field">
           <label for="nextDecision">Una sola cosa concreta a fer diferent</label>
           <input type="text" id="nextDecision" placeholder="p. ex. 2 sessions de focus abans de les 12:00">
@@ -308,13 +316,13 @@
         <button class="btn btn-accent" id="saveWeekBtn">Guardar setmana</button>
       </div>
 
-      <div class="card">
-        <div class="card-label">Setmanes anteriors</div>
+      <div class="section">
+        <div class="section-label">Setmanes anteriors</div>
         <ul id="weekHistory" class="history-list"></ul>
       </div>
 
-      <div class="card">
-        <div class="card-label">Còpia de seguretat</div>
+      <div class="section">
+        <div class="section-label">Còpia de seguretat</div>
         <button class="btn btn-ghost" id="exportBtn">Exportar dades (.json)</button>
         <div class="field" style="margin-top:12px;">
           <label for="importFile">Importar còpia de seguretat</label>
@@ -327,19 +335,19 @@
 
   <nav class="tabbar">
     <button class="tab active" data-screen="inici">
-      <svg class="tab-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="2" width="7" height="7" rx="1"/><rect x="11" y="2" width="7" height="7" rx="1"/><rect x="2" y="11" width="7" height="7" rx="1"/><rect x="11" y="11" width="7" height="7" rx="1"/></svg>
+      <svg class="tab-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="7" height="7" rx="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5"/></svg>
       <span>Inici</span>
     </button>
     <button class="tab" data-screen="avui">
-      <svg class="tab-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="10" r="7.3"/><path d="M6.5 10.2l2.4 2.4L14 7.4"/></svg>
+      <svg class="tab-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7.3"/><path d="M6.5 10.2l2.4 2.4L14 7.4"/></svg>
       <span>Avui</span>
     </button>
     <button class="tab" data-screen="focus">
-      <svg class="tab-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="10" r="7.3"/><circle cx="10" cy="10" r="2.3" fill="currentColor" stroke="none"/></svg>
+      <svg class="tab-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7.3"/><circle cx="10" cy="10" r="2.1" fill="currentColor" stroke="none"/></svg>
       <span>Focus</span>
     </button>
     <button class="tab" data-screen="setmana">
-      <svg class="tab-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.3" y="4" width="15.4" height="13.3" rx="1.5"/><path d="M2.3 8.2h15.4"/><path d="M6.5 2.3v3.4M13.5 2.3v3.4"/></svg>
+      <svg class="tab-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.3" y="4" width="15.4" height="13.3" rx="1.5"/><path d="M2.3 8.2h15.4"/><path d="M6.5 2.3v3.4M13.5 2.3v3.4"/></svg>
       <span>Setmana</span>
     </button>
   </nav>

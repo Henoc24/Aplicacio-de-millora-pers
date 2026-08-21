@@ -1,20 +1,55 @@
-/* ===== Tokens ===== */
+/* =========================================================
+   September — Personal OS
+   Direcció visual: minimalisme editorial fosc, un sol accent
+   amb propòsit, jerarquia tipogràfica per sobre de decoració.
+   Inspiració: Linear / Arc / Apple Health. Sense gradients
+   cridaners, sense glow, targetes només quan aporten alguna cosa.
+   ========================================================= */
+
 :root {
-  --bg: #14171C;
-  --surface: #1D2129;
-  --surface-2: #262B35;
-  --border: #2E333D;
-  --text: #ECEDEF;
-  --text-muted: #8D93A0;
-  --accent: #E3A857;      /* amber — primary actions, "September" warmth */
-  --accent-2: #4FB6AE;    /* teal — focus / concentration state */
+  /* Superfícies — jerarquia de foscor, mai negre pur */
+  --bg: #121316;
+  --surface: #1A1D22;
+  --surface-2: #21252B;
+  --surface-3: #282D34;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+
+  /* Text */
+  --text: #F1F2F4;
+  --text-secondary: #9399A3;
+  --text-tertiary: #5D626B;
+
+  /* Un sol accent principal (accions). El teal es reserva EXCLUSIVAMENT
+     pel mode Focus, perquè aquell moment se senti diferenciat — no és
+     un segon accent decoratiu, és un canvi d'estat intencionat. */
+  --accent: #E3A857;
+  --accent-ink: #1A1408;
+  --focus-accent: #4FB6AE;
+  --focus-ink: #08201E;
+
+  /* Estats semàntics (no accents decoratius) */
   --good: #6FCF8F;
   --warn: #E0785F;
 
   --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", Consolas, monospace;
   --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
-  --radius: 14px;
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 44px;
+
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+
+  /* Una sola ombra, molt subtil — s'usa poc */
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.24), 0 4px 16px -8px rgba(0, 0, 0, 0.4);
+
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-top: env(safe-area-inset-top, 0px);
 }
@@ -48,34 +83,36 @@ button {
   cursor: pointer;
   -webkit-appearance: none;
   appearance: none;
+  transition: opacity 0.12s ease, background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
 }
 
-.mono { font-family: var(--font-mono); }
+button:active { opacity: 0.72; }
+
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 
 /* ===== Status bar / header ===== */
 .statusbar {
-  padding: calc(14px + var(--safe-top)) 18px 14px;
+  padding: calc(var(--sp-4) + var(--safe-top)) var(--sp-5) var(--sp-4);
   border-bottom: 1px solid var(--border);
-  background: linear-gradient(180deg, #171A20, var(--bg));
 }
 
 .statusbar-top {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  margin-bottom: 12px;
+  margin-bottom: var(--sp-3);
 }
 
 .wordmark {
   font-family: var(--font-mono);
-  font-size: 13px;
-  letter-spacing: 2px;
-  color: var(--text);
+  font-size: 12px;
+  letter-spacing: 2.5px;
+  color: var(--text-secondary);
   font-weight: 600;
 }
 
 .wordmark span {
-  color: var(--text-muted);
+  color: var(--text-tertiary);
   font-weight: 400;
   letter-spacing: 0.5px;
   margin-left: 6px;
@@ -83,48 +120,44 @@ button {
 
 .clock {
   font-family: var(--font-mono);
-  font-size: 13px;
-  color: var(--text-muted);
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
 }
 
 .countdown-row {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: var(--sp-4);
 }
 
 .countdown-num {
   font-family: var(--font-mono);
-  font-size: 40px;
-  font-weight: 700;
-  color: var(--accent);
+  font-size: 34px;
+  font-weight: 600;
+  color: var(--text);
   line-height: 1;
-  min-width: 62px;
+  min-width: 56px;
+  letter-spacing: -0.5px;
 }
 
-.countdown-text {
-  flex: 1;
-}
+.countdown-text { flex: 1; }
 
 .countdown-text span {
-  font-size: 12.5px;
-  color: var(--text-muted);
-  letter-spacing: 0.3px;
+  font-size: 12px;
+  color: var(--text-tertiary);
 }
 
-.sprint-badge {
-  margin-top: 6px;
-}
+.sprint-badge { margin-top: var(--sp-2); }
 
 .sprint-badge span {
-  font-size: 11.5px;
-  color: var(--text-muted);
-  letter-spacing: 0.3px;
+  font-size: 11px;
+  color: var(--text-tertiary);
 }
 
 .sprint-track {
-  margin-top: 6px;
-  height: 4px;
+  margin-top: var(--sp-2);
+  height: 3px;
   border-radius: 2px;
   background: var(--surface-2);
   overflow: hidden;
@@ -137,16 +170,16 @@ button {
   transition: width 0.4s ease;
 }
 
-.son-window-row { margin-top: 10px; }
+.son-window-row { margin-top: var(--sp-3); }
 
 /* ===== Screens ===== */
 main#screens {
   flex: 1;
-  padding: 18px 18px calc(100px + var(--safe-bottom));
+  padding: var(--sp-5) var(--sp-5) calc(100px + var(--safe-bottom));
 }
 
 .screen { display: none; }
-.screen.active { display: block; animation: fadeIn 0.25s ease; }
+.screen.active { display: block; animation: fadeIn 0.22s ease-out; }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(4px); }
@@ -155,42 +188,113 @@ main#screens {
 
 .screen-title {
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 12.5px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--text-muted);
-  margin: 4px 0 16px;
+  color: var(--text-tertiary);
+  margin: 0 0 var(--sp-5);
   font-weight: 600;
 }
 
-/* ===== Cards ===== */
+/* ===== Inici: bloc de benvinguda ===== */
+.hero-block { margin-bottom: var(--sp-5); }
+
+.hero-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 1.8px;
+  color: var(--text-tertiary);
+  margin-bottom: var(--sp-1);
+}
+
+.hero-title {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  margin: 0;
+  color: var(--text);
+}
+
+/* ===== Files de estadístiques (Inici) ===== */
+.stat-row {
+  display: flex;
+  margin-bottom: var(--sp-6);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.stat-block {
+  flex: 1;
+  padding: var(--sp-4) var(--sp-2);
+  text-align: center;
+  border-left: 1px solid var(--border);
+}
+
+.stat-block:first-child { border-left: none; }
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.1;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: var(--sp-1);
+  letter-spacing: 0.2px;
+}
+
+/* ===== Section — grup de contingut sense caixa ===== */
+.section {
+  margin-bottom: var(--sp-6);
+}
+
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: var(--sp-3);
+}
+
+.section-label.sub {
+  margin-top: var(--sp-5);
+}
+
+/* ===== Card — només per moments que ho mereixen ===== */
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 16px;
-  margin-bottom: 14px;
+  padding: var(--sp-5);
+  margin-bottom: var(--sp-4);
+  box-shadow: var(--shadow-card);
 }
 
 .card-label {
   font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 1.5px;
+  font-size: 10.5px;
+  letter-spacing: 1.4px;
   text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 12px;
+  color: var(--text-tertiary);
+  margin-bottom: var(--sp-3);
 }
 
-.card-label.sub {
-  margin-top: 4px;
+.card-decision {
+  border-left: 2px solid var(--accent);
 }
+
+.card-decision .decision-text { border-left: none; padding-left: 0; }
 
 /* ===== Rows / fields ===== */
 .row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: var(--sp-3);
 }
 
 .row-label {
@@ -199,22 +303,19 @@ main#screens {
 }
 
 .row-value {
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 600;
-  color: var(--accent-2);
+  color: var(--text);
 }
 
-.field {
-  margin-bottom: 14px;
-}
-
+.field { margin-bottom: var(--sp-4); }
 .field:last-of-type { margin-bottom: 0; }
 
 .field label {
   display: block;
   font-size: 13px;
-  color: var(--text-muted);
-  margin-bottom: 6px;
+  color: var(--text-secondary);
+  margin-bottom: 7px;
 }
 
 input[type="text"],
@@ -224,15 +325,16 @@ textarea {
   width: 100%;
   background: var(--surface-2);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 11px 12px;
+  border-radius: var(--radius-sm);
+  padding: 11px 13px;
   font-size: 15px;
   color: var(--text);
 }
 
 input:focus, textarea:focus, button:focus-visible {
-  outline: 2px solid var(--accent-2);
-  outline-offset: 1px;
+  outline: none;
+  border-color: var(--focus-accent);
+  box-shadow: 0 0 0 3px rgba(79, 182, 174, 0.15);
 }
 
 textarea { resize: vertical; font-family: var(--font-body); }
@@ -244,18 +346,18 @@ textarea { resize: vertical; font-family: var(--font-body); }
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--sp-2);
 }
 
 .habit-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 10px 12px;
-  background: var(--surface-2);
-  border-radius: 10px;
-  border: 1px solid transparent;
+  gap: var(--sp-3);
+  padding: 12px 14px;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
 }
 
 .habit-item.checked {
@@ -265,21 +367,22 @@ textarea { resize: vertical; font-family: var(--font-body); }
 .habit-main {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--sp-3);
 }
 
 .habit-check {
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
-  border: 2px solid var(--border);
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  border: 1.5px solid var(--border-strong);
   background: transparent;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--bg);
+  color: var(--accent-ink);
   font-weight: 700;
+  font-size: 13px;
 }
 
 .habit-item.checked .habit-check {
@@ -289,17 +392,14 @@ textarea { resize: vertical; font-family: var(--font-body); }
 
 .habit-name { font-size: 14.5px; }
 
-/* ===== Dot-row (finestra de consistència visual, substitueix "X/7" en text) ===== */
-.dot-row {
-  display: inline-flex;
-  gap: 4px;
-}
+/* ===== Dot-row (finestra de consistència) ===== */
+.dot-row { display: inline-flex; gap: 4px; }
 
 .dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 2px;
-  background: var(--surface-2);
+  background: var(--surface-3);
   border: 1px solid var(--border);
 }
 
@@ -307,201 +407,190 @@ textarea { resize: vertical; font-family: var(--font-body); }
 .dot-filled.dot-mid { background: var(--accent); border-color: var(--accent); }
 .dot-filled.dot-low { background: var(--warn); border-color: var(--warn); }
 
-/* ===== Barra visual de la franja de son ===== */
+/* ===== Barra de la franja de son ===== */
 .sleep-bar {
   position: relative;
-  height: 10px;
-  border-radius: 5px;
+  height: 8px;
+  border-radius: 4px;
   background: var(--surface-2);
-  margin-top: 14px;
-  overflow: visible;
+  margin-top: var(--sp-4);
 }
 
 .sleep-bar-target {
   position: absolute;
   top: 0;
   height: 100%;
-  border-radius: 5px;
-  background: rgba(227, 168, 87, 0.28);
+  border-radius: 4px;
+  background: rgba(227, 168, 87, 0.25);
 }
 
 .sleep-bar-marker {
   position: absolute;
   top: 50%;
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
   border-radius: 50%;
   background: var(--warn);
   border: 2px solid var(--bg);
   transform: translate(-50%, -50%);
+  transition: left 0.25s ease;
 }
 
-.sleep-bar-marker.sleep-bar-marker-ok {
-  background: var(--good);
-}
+.sleep-bar-marker.sleep-bar-marker-ok { background: var(--good); }
 
 .sleep-bar-labels {
   display: flex;
   justify-content: space-between;
-  margin-top: 6px;
-  font-size: 10.5px;
-  color: var(--text-muted);
+  margin-top: var(--sp-2);
+  font-size: 10px;
+  color: var(--text-tertiary);
 }
 
 /* ===== Habit manager ===== */
 .manage-list {
   list-style: none;
-  margin: 0 0 12px;
+  margin: 0 0 var(--sp-3);
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .manage-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 9px 12px;
-  background: var(--surface-2);
-  border-radius: 10px;
+  padding: 9px 13px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   font-size: 14px;
 }
 
 .remove-btn {
   background: none;
   border: none;
-  color: var(--text-muted);
-  font-size: 15px;
+  color: var(--text-tertiary);
+  font-size: 14px;
   padding: 2px 6px;
 }
 
 .remove-btn:hover { color: var(--warn); }
 
 .manage-empty {
-  color: var(--text-muted);
+  color: var(--text-tertiary);
   font-size: 13.5px;
-  margin-bottom: 12px;
+  margin-bottom: var(--sp-3);
 }
 
-.add-habit-row {
-  display: flex;
-  gap: 8px;
-}
+.add-habit-row { display: flex; gap: var(--sp-2); }
+.add-habit-row input { flex: 1; }
 
-.add-habit-row input {
-  flex: 1;
-}
-
-.btn-compact {
-  width: auto;
-  padding: 11px 14px;
-  white-space: nowrap;
-}
+.btn-compact { width: auto; padding: 11px 15px; white-space: nowrap; }
 
 /* ===== Buttons ===== */
 .btn {
   width: 100%;
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   padding: 14px 16px;
   font-size: 15px;
   font-weight: 600;
   text-align: center;
 }
 
-.btn-accent { background: var(--accent); color: #1A140A; }
-.btn-accent2 { background: var(--accent-2); color: #0B1E1C; }
-.btn-warn { background: transparent; border: 1.5px solid var(--warn); color: var(--warn); margin-bottom: 12px; }
+.btn-accent { background: var(--accent); color: var(--accent-ink); }
+.btn-accent2 { background: var(--focus-accent); color: var(--focus-ink); }
 .btn-ghost { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
 
-.focus-controls {
-  display: flex;
-  gap: 10px;
+.card-cta { border-color: var(--border-strong); }
+.card-cta .row { margin-bottom: var(--sp-4); }
+.cta-sub { font-size: 12px; color: var(--text-tertiary); }
+
+/* Botó-enllaç: acció secundària sense pes visual de botó */
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: var(--sp-2);
+  width: 100%;
+  text-align: center;
 }
+.link-btn:hover { color: var(--text); }
+.link-btn-warn { color: var(--warn); opacity: 0.85; margin-top: var(--sp-4); }
+
+.focus-controls { display: flex; gap: var(--sp-2); }
 .focus-controls .btn { width: auto; flex: 1; }
 
 /* ===== Motiu de la interrupció ===== */
-.reason-chips {
-  margin-bottom: 12px;
-  text-align: left;
-}
+.reason-chips { margin-top: var(--sp-2); text-align: center; }
 
 .reason-chips-label {
   display: block;
   font-size: 12px;
-  color: var(--text-muted);
-  margin-bottom: 8px;
+  color: var(--text-tertiary);
+  margin-bottom: var(--sp-2);
 }
 
-.chip-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
+.chip-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
 
 .chip {
-  padding: 7px 11px;
+  padding: 6px 12px;
   border-radius: 999px;
   border: 1px solid var(--border);
   background: var(--surface-2);
-  color: var(--text-muted);
-  font-size: 12.5px;
+  color: var(--text-secondary);
+  font-size: 12px;
 }
 
-.chip-tapped {
-  border-color: var(--accent);
-  color: var(--text);
-  background: #33291a;
-}
+.chip-tapped { border-color: var(--accent); color: var(--text); }
 
 /* ===== Decisió setmanal ===== */
 .decision-text {
-  font-size: 15px;
+  font-size: 15.5px;
   color: var(--text);
   font-style: italic;
-  margin: 0 0 12px;
+  line-height: 1.5;
+  margin: 0 0 var(--sp-3);
 }
 
 /* ===== Focus screen ===== */
-.focus-card .btn { margin-top: 6px; }
+.card-focus-setup { padding-top: var(--sp-5); }
 
-.focus-running { text-align: center; }
+.focus-running { text-align: center; padding: var(--sp-4) 0; }
 
-.focus-meta { margin-bottom: 10px; }
+.focus-meta { margin-bottom: var(--sp-3); }
 .focus-subject { font-size: 16px; font-weight: 600; }
-.focus-objective { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+.focus-objective { font-size: 13px; color: var(--text-tertiary); margin-top: 2px; }
 
 .timer {
   font-family: var(--font-mono);
-  font-size: 56px;
-  font-weight: 700;
-  color: var(--accent-2);
-  margin: 18px 0 20px;
-  letter-spacing: 1px;
+  font-size: 52px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.5px;
 }
 
 /* ===== Segmented control ===== */
-.segmented {
-  display: flex;
-  gap: 8px;
-}
+.segmented { display: flex; gap: var(--sp-2); }
 
 .seg-btn {
   flex: 1;
   padding: 10px;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border);
   background: var(--surface-2);
-  font-size: 15px;
-  color: var(--text-muted);
+  font-size: 14.5px;
+  color: var(--text-secondary);
   font-weight: 600;
 }
 
 .seg-btn.selected {
   border-color: var(--accent);
   color: var(--text);
-  background: #33291a;
+  background: rgba(227, 168, 87, 0.12);
 }
 
 /* ===== History lists ===== */
@@ -511,18 +600,20 @@ textarea { resize: vertical; font-family: var(--font-body); }
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .history-empty {
-  color: var(--text-muted);
-  font-size: 13.5px;
+  color: var(--text-tertiary);
+  font-size: 13px;
+  padding: var(--sp-3) 0;
 }
 
 .history-item {
-  padding: 10px 12px;
-  background: var(--surface-2);
-  border-radius: 10px;
+  padding: 10px 13px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   font-size: 13.5px;
 }
 
@@ -530,140 +621,107 @@ textarea { resize: vertical; font-family: var(--font-body); }
   display: flex;
   justify-content: space-between;
   font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--text-muted);
+  font-size: 11.5px;
+  color: var(--text-tertiary);
   margin-bottom: 4px;
 }
 
-.history-item .h-main {
-  color: var(--text);
-}
+.history-item .h-main { color: var(--text); }
 
-/* ===== Lectures derivades dels pilars (Setmana) ===== */
+/* ===== Lectures derivades dels pilars ===== */
 .readout-grid {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-bottom: 14px;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
 }
 
 .readout-item {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  padding: 10px 12px;
-  background: var(--surface-2);
-  border-radius: 10px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
 }
 
-.readout-label {
-  font-size: 13.5px;
-  color: var(--text);
-}
+.readout-item:last-child { border-bottom: none; }
 
-.readout-value {
-  font-size: 13px;
-  color: var(--accent);
-}
+.readout-label { font-size: 14px; color: var(--text); }
+.readout-value { font-size: 13px; color: var(--text-secondary); font-family: var(--font-mono); }
 
 .hint-text {
   font-size: 12px;
-  color: var(--text-muted);
-  margin: 8px 0 14px;
+  color: var(--text-tertiary);
+  margin: var(--sp-2) 0 var(--sp-4);
+  line-height: 1.5;
 }
 
-/* ===== Context narratiu (Avui) ===== */
+/* ===== Context narratiu ===== */
 .narrative-list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-3);
 }
 
 .narrative-list li {
-  font-size: 13.5px;
-  color: var(--text);
-  padding-left: 14px;
-  position: relative;
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
 }
 
-.narrative-list li::before {
-  content: "→";
-  position: absolute;
-  left: 0;
-  color: var(--accent-2);
-}
-
-/* ===== Rutina d'avui ===== */
+/* ===== Rutina / horari ===== */
 .exercise-list {
   list-style: none;
-  margin: 10px 0 0;
+  margin: var(--sp-3) 0 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .exercise-item {
   display: flex;
   justify-content: space-between;
-  padding: 9px 12px;
-  background: var(--surface-2);
-  border-radius: 10px;
+  padding: 9px 13px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   font-size: 13.5px;
 }
 
-.exercise-item .ex-detail {
-  font-family: var(--font-mono);
-  color: var(--text-muted);
-  font-size: 12.5px;
-}
+.exercise-item .ex-detail { font-family: var(--font-mono); color: var(--text-tertiary); font-size: 12px; }
 
-.routine-rest {
-  color: var(--text-muted);
-  font-size: 13.5px;
-  margin-top: 10px;
-}
+.routine-rest { color: var(--text-tertiary); font-size: 13.5px; margin-top: var(--sp-3); }
 
 input[type="file"] {
   width: 100%;
-  color: var(--text-muted);
+  color: var(--text-tertiary);
   font-size: 12.5px;
-  margin-top: 4px;
+  margin-top: var(--sp-1);
+  padding: var(--sp-2) 0;
 }
 
-.phone-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 10px;
-}
+.phone-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--sp-2); }
 
 /* ===== Timer circular de Focus ===== */
 .timer-ring-wrap {
   position: relative;
-  width: 220px;
-  height: 220px;
-  margin: 10px auto 20px;
+  width: 240px;
+  height: 240px;
+  margin: var(--sp-4) auto var(--sp-6);
 }
 
-.timer-ring {
-  width: 100%;
-  height: 100%;
-  transform: rotate(-90deg);
-}
+.timer-ring { width: 100%; height: 100%; transform: rotate(-90deg); }
 
-.timer-ring-track {
-  fill: none;
-  stroke: var(--surface-2);
-  stroke-width: 8;
-}
+.timer-ring-track { fill: none; stroke: var(--surface-2); stroke-width: 6; }
 
 .timer-ring-progress {
   fill: none;
-  stroke: var(--accent-2);
-  stroke-width: 8;
+  stroke: var(--focus-accent);
+  stroke-width: 6;
   stroke-linecap: round;
   transition: stroke-dashoffset 1s linear;
 }
@@ -674,15 +732,42 @@ input[type="file"] {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0;
-  font-size: 42px;
 }
 
-.btn-quickstart {
-  margin-top: 10px;
-  font-size: 13px;
-  font-weight: 500;
+/* ===== Resum de sessió (després de Focus) ===== */
+.card-focus-log { text-align: center; }
+
+.log-hero { margin-bottom: var(--sp-5); }
+
+.log-hero-value {
+  font-family: var(--font-mono);
+  font-size: 48px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1;
 }
+
+.log-hero-label {
+  font-size: 12.5px;
+  color: var(--text-tertiary);
+  margin-top: var(--sp-1);
+}
+
+#logMinutes { margin-top: var(--sp-3); text-align: center; }
+
+.log-question {
+  text-align: left;
+  margin-bottom: var(--sp-4);
+}
+
+.log-question label {
+  display: block;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 7px;
+}
+
+.log-small-input { max-width: 100px; }
 
 /* ===== Tab bar ===== */
 .tabbar {
@@ -693,46 +778,42 @@ input[type="file"] {
   display: flex;
   max-width: 480px;
   margin: 0 auto;
-  background: rgba(20, 23, 28, 0.92);
-  backdrop-filter: blur(10px);
+  background: rgba(18, 19, 22, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border-top: 1px solid var(--border);
-  padding: 8px 8px calc(8px + var(--safe-bottom));
-  gap: 4px;
+  padding: var(--sp-2) var(--sp-2) calc(var(--sp-2) + var(--safe-bottom));
+  gap: 2px;
 }
 
 .tab {
   flex: 1;
   background: none;
   border: none;
-  border-radius: 12px;
-  padding: 8px 0 7px;
-  font-size: 11.5px;
-  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  padding: 8px 0 6px;
+  font-size: 11px;
+  color: var(--text-tertiary);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  font-weight: 600;
-  transition: background 0.15s ease, color 0.15s ease;
+  font-weight: 500;
 }
 
-.tab-icon {
-  width: 21px;
-  height: 21px;
-}
+.tab-icon { width: 20px; height: 20px; }
 
-.tab.active {
-  color: var(--accent);
-  background: rgba(227, 168, 87, 0.12);
-}
+.tab.active { color: var(--text); background: var(--surface-2); }
+.tab[data-screen="focus"].active { color: var(--focus-accent); }
 
 /* ===== Responsive: desktop mode preview ===== */
 @media (min-width: 560px) {
   #app { border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
-  body { display: flex; justify-content: center; background: #0C0E11; }
+  body { display: flex; justify-content: center; background: #0A0B0D; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .screen.active { animation: none; }
   .sprint-fill { transition: none; }
+  button:active { opacity: 1; }
 }

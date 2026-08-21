@@ -245,6 +245,7 @@ function renderAvui() {
 
   const focusToday = state.focusSessions.filter(s => s.date === today).length;
   document.getElementById('focusTodayCount').textContent = focusToday;
+  document.getElementById('focusTodayCountLabel').textContent = focusToday === 1 ? '1 sessió avui' : `${focusToday} sessions avui`;
 
   renderHabitManager();
   renderRoutineToday();
@@ -253,7 +254,37 @@ function renderAvui() {
 
 /* ---------------- Inici (Home) — vista d'estat, no d'acció ---------------- */
 
+const MONTH_NAMES = ['gener', 'febrer', 'març', 'abril', 'maig', 'juny', 'juliol', 'agost', 'setembre', 'octubre', 'novembre', 'desembre'];
+
+function formatIniciDate() {
+  const now = new Date();
+  const weekday = DAY_KEYS[now.getDay()].toUpperCase();
+  return `${weekday} · ${now.getDate()} ${MONTH_NAMES[now.getMonth()]}`;
+}
+
+function renderIniciSnapshot() {
+  const today = todayISO();
+  const rec = peekDaily(today);
+  const habitsDone = state.habits.filter(h => rec[h.key]).length;
+  const focusToday = state.focusSessions.filter(s => s.date === today);
+  const sleepDone = !!rec.bedtime;
+
+  const stats = [
+    { value: `${habitsDone}/${state.habits.length}`, label: 'hàbits' },
+    { value: `${focusToday.length}`, label: focusToday.length === 1 ? 'sessió focus' : 'sessions focus' },
+    { value: sleepDone ? '✓' : '—', label: 'son registrat' },
+  ];
+
+  document.getElementById('iniciSnapshot').innerHTML = stats.map(s => `
+    <div class="stat-block">
+      <div class="stat-value mono">${s.value}</div>
+      <div class="stat-label">${s.label}</div>
+    </div>`).join('');
+}
+
 function renderInici() {
+  document.getElementById('iniciDateLine').textContent = formatIniciDate();
+  renderIniciSnapshot();
   renderNarrative();
 
   const today = todayISO();
@@ -841,6 +872,9 @@ function finishFocusTimer(completedByTimer) {
   const elapsedMinutes = Math.max(1, Math.round(elapsedSeconds / 60));
 
   document.getElementById('logMinutes').value = elapsedMinutes;
+  document.getElementById('logMinutesDisplay').textContent = elapsedMinutes;
+  document.getElementById('logMinutes').hidden = true;
+  document.getElementById('editMinutesToggle').textContent = 'editar';
   document.getElementById('logInterruptions').value = focusTimer.interruptions;
   setSegmented('completedSeg', completedByTimer ? 'true' : null);
   setSegmented('comprehensionSeg', null);
@@ -848,6 +882,18 @@ function finishFocusTimer(completedByTimer) {
 
   renderFocus();
 }
+
+document.getElementById('editMinutesToggle')?.addEventListener('click', (e) => {
+  const input = document.getElementById('logMinutes');
+  const showing = input.hidden;
+  input.hidden = !showing;
+  e.target.textContent = showing ? 'fet' : 'editar';
+  if (showing) input.focus();
+});
+
+document.getElementById('logMinutes')?.addEventListener('input', (e) => {
+  document.getElementById('logMinutesDisplay').textContent = e.target.value || '0';
+});
 
 function setSegmented(containerId, selectedVal) {
   const container = document.getElementById(containerId);
