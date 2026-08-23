@@ -137,7 +137,7 @@ button:active { opacity: 0.72; }
   font-weight: 600;
   color: var(--text);
   line-height: 1;
-  min-width: 56px;
+  flex-shrink: 0;
   letter-spacing: -0.5px;
 }
 
@@ -637,17 +637,20 @@ textarea { resize: vertical; font-family: var(--font-body); }
 }
 
 .readout-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
   padding: 11px 0;
   border-bottom: 1px solid var(--border);
 }
 
 .readout-item:last-child { border-bottom: none; }
 
-.readout-label { font-size: 14px; color: var(--text); }
-.readout-value { font-size: 13px; color: var(--text-secondary); font-family: var(--font-mono); }
+.readout-label { display: block; font-size: 12.5px; color: var(--text-tertiary); letter-spacing: 0.3px; text-transform: uppercase; font-family: var(--font-mono); }
+.readout-value {
+  display: block;
+  font-size: 14.5px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  margin-top: 3px;
+}
 
 .hint-text {
   font-size: 12px;
@@ -670,6 +673,19 @@ textarea { resize: vertical; font-family: var(--font-body); }
   font-size: 14px;
   color: var(--text-secondary);
   line-height: 1.5;
+  padding-left: 12px;
+  position: relative;
+}
+
+.narrative-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
 }
 
 /* ===== Rutina / horari ===== */
