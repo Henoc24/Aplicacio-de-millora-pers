@@ -1,4 +1,4 @@
-const CACHE_NAME = 'september-v0-cache-5'; // bump aquest número cada cop que actualitzis fitxers, si no el mòbil segueix servint la versió antiga en cache
+const CACHE_NAME = 'september-v0-cache-7'; // bump aquest número cada cop que actualitzis fitxers, si no el mòbil segueix servint la versió antiga en cache
 const ASSETS = [
   './',
   './index.html',

@@ -146,6 +146,18 @@ la puntuació inventada que es va eliminar dels sliders, només amagada
 darrere d'una fórmula. Aura remet als pilars que ja es veuen a la
 mateixa pantalla, sense duplicar-los.
 
+## Línia de temps (Avui)
+
+Els hàbits poden tenir una hora opcional. Un hàbit sense hora ("Cura
+personal") es queda a la llista senzilla de sempre. Un hàbit amb hora
+("Entrenament — 18:00") deixa aquesta llista i apareix a la nova
+"Línia de temps", intercalat cronològicament amb els blocs de
+l'Horari del dia — així Avui mostra el dia sencer d'un cop, no dues
+llistes separades que calia ajuntar mentalment. Es marca igual (mateix
+botó de check, mateixes dades) estigui a la línia de temps o a la
+llista simple. Per posar o treure l'hora d'un hàbit ja existent,
+"Gestionar hàbits" ara té un selector d'hora per cadascun.
+
 ## Horari (i notificacions de veritat)
 
 Nova targeta a Avui, `horari-exemple.json` com a plantilla. A

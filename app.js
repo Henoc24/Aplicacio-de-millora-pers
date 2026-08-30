@@ -19,9 +19,9 @@ function defaultState() {
     focusSessions: [], // [{ id, date, subject, objective, plannedMinutes, actualMinutes, completed, comprehension, interruptions }]
     weeks: {},         // { 'YYYY-MM-DD' (monday) : { weight, ratings:{}, social, phone:{util,oci,automatic}, notes } }
     habits: [          // hàbits de check manual — editables des de l'app; "Son" és apart perquè es calcula sol
-      { key: 'entrenament', name: 'Entrenament' },
-      { key: 'cura', name: 'Cura personal (pell / postura)' },
-      { key: 'social', name: 'Interacció social intencionada' },
+      { key: 'entrenament', name: 'Entrenament', time: null }, // "time" opcional: si té hora, apareix a la línia de temps en comptes de la llista sense hora
+      { key: 'cura', name: 'Cura personal (pell / postura)', time: null },
+      { key: 'social', name: 'Interacció social intencionada', time: null },
     ],
     // Context extern per pilar — de moment només s'usa "fisic" (la rutina).
     // L'estructura és genèrica perquè altres pilars (p. ex. coneixement) hi
@@ -195,6 +195,56 @@ function renderDotRow(containerId, key) {
   el.setAttribute('aria-label', `${count}/7`);
 }
 
+function bindHabitToggles(container) {
+  container.querySelectorAll('[data-toggle]').forEach(btn => {
+    btn.addEventListener('click', () => toggleHabit(btn.dataset.toggle));
+  });
+}
+
+// Uneix els blocs de l'Horari (informatius) i els hàbits amb hora (marcables)
+// en una sola llista cronològica — així Avui mostra el dia sencer d'un cop,
+// no dues llistes separades que calia ajuntar mentalment.
+function renderTimeline(rec) {
+  const section = document.getElementById('timelineSection');
+  const list = document.getElementById('timelineList');
+
+  const horariBlocks = (state.horari && state.horari.horari && state.horari.horari[todayDayKey()]) || [];
+  const items = horariBlocks.map(b => ({ hora: b.hora, nom: b.nom, kind: 'horari' }));
+
+  state.habits.filter(h => h.time).forEach(h => {
+    items.push({ hora: h.time, nom: h.name, kind: 'habit', key: h.key });
+  });
+
+  items.sort((a, b) => (a.hora || '').localeCompare(b.hora || ''));
+
+  if (items.length === 0) {
+    section.hidden = true;
+    return;
+  }
+  section.hidden = false;
+
+  list.innerHTML = items.map(it => {
+    if (it.kind === 'habit') {
+      const checked = !!rec[it.key];
+      return `
+        <li class="habit-item ${checked ? 'checked' : ''}" data-key="${it.key}">
+          <div class="habit-main">
+            <button class="habit-check" data-toggle="${it.key}" aria-label="${escapeHtml(it.nom)}">${checked ? '✓' : ''}</button>
+            <span class="habit-name">${escapeHtml(it.nom)}</span>
+          </div>
+          <span class="mono timeline-time">${escapeHtml(it.hora)}</span>
+        </li>`;
+    }
+    return `
+      <li class="exercise-item">
+        <span>${escapeHtml(it.nom)}</span>
+        <span class="ex-detail">${escapeHtml(it.hora)}</span>
+      </li>`;
+  }).join('');
+
+  bindHabitToggles(list);
+}
+
 function slugify(str) {
   return str
     .toLowerCase()
@@ -212,11 +262,12 @@ function renderAvui() {
   const today = todayISO();
   const rec = peekDaily(today); // només per mostrar — no crea res a l'estat fins que l'usuari interactua
 
+  const untimedHabits = state.habits.filter(h => !h.time);
   const list = document.getElementById('habitList');
-  if (state.habits.length === 0) {
-    list.innerHTML = `<li class="history-empty">Encara no tens cap hàbit — afegeix-ne un a "Gestionar hàbits".</li>`;
+  if (untimedHabits.length === 0) {
+    list.innerHTML = `<li class="history-empty">Cap hàbit sense hora fixa — afegeix-ne un a "Gestionar hàbits" o mira la línia de temps.</li>`;
   } else {
-    list.innerHTML = state.habits.map(h => `
+    list.innerHTML = untimedHabits.map(h => `
         <li class="habit-item ${rec[h.key] ? 'checked' : ''}" data-key="${h.key}">
           <div class="habit-main">
             <button class="habit-check" data-toggle="${h.key}" aria-label="${escapeHtml(h.name)}">${rec[h.key] ? '✓' : ''}</button>
@@ -224,12 +275,11 @@ function renderAvui() {
           </div>
           <span class="dot-row" id="dots-${h.key}"></span>
         </li>`).join('');
-    state.habits.forEach(h => renderDotRow(`dots-${h.key}`, h.key));
+    untimedHabits.forEach(h => renderDotRow(`dots-${h.key}`, h.key));
   }
+  bindHabitToggles(list);
 
-  list.querySelectorAll('[data-toggle]').forEach(btn => {
-    btn.addEventListener('click', () => toggleHabit(btn.dataset.toggle));
-  });
+  renderTimeline(rec);
 
   const bedtimeInput = document.getElementById('bedtimeInput');
   bedtimeInput.value = rec.bedtime || '';
@@ -412,19 +462,13 @@ function renderHorariToday() {
   empty.hidden = true;
   today.hidden = false;
 
-  const blocks = [...((horari.horari && horari.horari[todayDayKey()]) || [])]
-    .sort((a, b) => (a.hora || '').localeCompare(b.hora || ''));
+  const blocks = [...((horari.horari && horari.horari[todayDayKey()]) || [])];
 
-  const list = document.getElementById('horariList');
-  if (blocks.length === 0) {
-    list.innerHTML = `<li class="routine-rest">Cap bloc avui.</li>`;
-  } else {
-    list.innerHTML = blocks.map(b => `
-      <li class="exercise-item">
-        <span>${escapeHtml(b.nom || '—')}</span>
-        <span class="ex-detail">${escapeHtml(b.hora || '')}</span>
-      </li>`).join('');
-  }
+  // El detall dels blocs d'avui ja es mostra a "Línia de temps" (Avui) —
+  // aquí només confirmem que s'ha carregat correctament, sense duplicar-lo.
+  document.getElementById('horariSummary').textContent = blocks.length === 0
+    ? 'Horari carregat — cap bloc avui.'
+    : `Horari carregat — ${blocks.length} bloc${blocks.length === 1 ? '' : 's'} avui (a "Línia de temps", dalt).`;
 }
 
 document.getElementById('horariFile')?.addEventListener('change', (e) => {
@@ -440,7 +484,7 @@ document.getElementById('horariFile')?.addEventListener('change', (e) => {
       }
       state.horari = parsed;
       saveState();
-      renderHorariToday();
+      renderAvui();
     } catch (err) {
       alert('El fitxer no és un JSON vàlid.');
     } finally {
@@ -455,7 +499,7 @@ document.getElementById('removeHorariBtn')?.addEventListener('click', () => {
   if (!ok) return;
   state.horari = null;
   saveState();
-  renderHorariToday();
+  renderAvui();
 });
 
 /* ---- Exportar a .ics (calendari real amb notificacions fiables del sistema) ---- */
@@ -626,11 +670,23 @@ function renderHabitManager() {
     ul.innerHTML = state.habits.map(h => `
       <li class="manage-item">
         <span>${escapeHtml(h.name)}</span>
-        <button class="remove-btn" data-remove="${h.key}" aria-label="Eliminar ${escapeHtml(h.name)}">✕</button>
+        <span class="manage-item-controls">
+          <input type="time" class="habit-time-input" data-habit-time="${h.key}" value="${h.time || ''}" title="Hora opcional" aria-label="Hora opcional per a ${escapeHtml(h.name)}">
+          <button class="remove-btn" data-remove="${h.key}" aria-label="Eliminar ${escapeHtml(h.name)}">✕</button>
+        </span>
       </li>`).join('');
   }
   ul.querySelectorAll('[data-remove]').forEach(btn => {
     btn.addEventListener('click', () => removeHabit(btn.dataset.remove));
+  });
+  ul.querySelectorAll('[data-habit-time]').forEach(input => {
+    input.addEventListener('change', () => {
+      const habit = state.habits.find(h => h.key === input.dataset.habitTime);
+      if (!habit) return;
+      habit.time = input.value || null;
+      saveState();
+      renderAvui();
+    });
   });
 }
 
@@ -645,11 +701,13 @@ function removeHabit(key) {
 
 document.getElementById('addHabitBtn')?.addEventListener('click', () => {
   const input = document.getElementById('newHabitName');
+  const timeInput = document.getElementById('newHabitTime');
   const name = input.value.trim();
   if (!name) return;
-  state.habits.push({ key: makeHabitKey(name), name });
+  state.habits.push({ key: makeHabitKey(name), name, time: timeInput.value || null });
   saveState();
   input.value = '';
+  timeInput.value = '';
   renderAvui();
 });
 
@@ -1094,7 +1152,6 @@ function renderWeekHistory(currentWeekKey) {
     if (w.weight) parts.push(`${w.weight} kg`);
     if (w.comms) parts.push(`${w.comms.newPeople ?? 0} pers. noves`);
     if (w.social != null) parts.push(`${w.social} interaccions`);
-    if (w.auraRoba != null) parts.push(`estil ${w.auraRoba}/7`);
     if (w.phoneUsage) parts.push(`mòbil: ${w.phoneUsage}`);
     if (w.decisionOutcome) parts.push(`decisió anterior: ${outcomeLabel[w.decisionOutcome]}`);
     const decisionLine = w.decision ? `<div class="h-main" style="margin-top:4px;">→ ${escapeHtml(w.decision)}</div>` : '';

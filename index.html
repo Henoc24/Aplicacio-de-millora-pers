@@ -64,8 +64,13 @@
     <section id="screen-avui" class="screen">
       <h1 class="screen-title">Avui</h1>
 
+      <div class="section" id="timelineSection" hidden>
+        <div class="section-label">Línia de temps</div>
+        <ul id="timelineList" class="habit-list"></ul>
+      </div>
+
       <div class="section">
-        <div class="section-label">Hàbits</div>
+        <div class="section-label">Hàbits sense hora fixa</div>
         <ul id="habitList" class="habit-list"></ul>
       </div>
 
@@ -92,7 +97,7 @@
           <input type="file" id="horariFile" accept="application/json">
         </div>
         <div id="horariToday" hidden>
-          <ul class="exercise-list" id="horariList"></ul>
+          <p class="hint-text" style="margin-top:0;" id="horariSummary"></p>
           <div class="row" style="margin-top:12px;">
             <button class="remove-btn" id="removeHorariBtn" aria-label="Treure l'horari">✕</button>
             <button class="btn btn-ghost btn-compact" id="exportIcsBtn">Exportar a calendari (.ics)</button>
@@ -123,8 +128,10 @@
         <ul id="habitManageList" class="manage-list"></ul>
         <div class="add-habit-row">
           <input type="text" id="newHabitName" placeholder="Nom del nou hàbit">
+          <input type="time" id="newHabitTime" class="add-habit-time" title="Hora opcional" aria-label="Hora opcional del nou hàbit">
           <button class="btn btn-ghost btn-compact" id="addHabitBtn">+ Afegir</button>
         </div>
+        <p class="hint-text">L'hora és opcional — deixa-la en blanc per a hàbits sense horari fix.</p>
       </div>
 
       <div class="card card-cta">
