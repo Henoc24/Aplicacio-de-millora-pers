@@ -222,3 +222,10 @@ en V1, en quant hi hagi almenys 3-4 setmanes registrades.
   pilar, ajust d'hàbits a l'horari real de curs.
 - V2: anàlisi de patrons, mode escriptori, fotos de progrés.
 - V3: widget natiu + capa d'IA — només si V0/V1 demostren ser útils.
+
+## Configuració i edició (actualització)
+
+- **Configuració** (icona d'engranatge a la capçalera): pujar/treure la rutina i l'horari, exportar el .ics i gestionar hàbits. Avui només mostra el dia: línia de temps, hàbits, rutina d'avui, son i Focus.
+- **Dies recents** (Avui): tria un dels últims 7 dies per marcar un hàbit oblidat o apuntar el son.
+- **Eliminar registres**: toca una sessió de Focus o una setmana guardada per eliminar-la (amb confirmació).
+- Marcar un hàbit vibra breument; Avui mostra el mateix estat del dia que Inici.

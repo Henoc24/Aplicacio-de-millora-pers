@@ -101,12 +101,19 @@ function fmtDateShort(iso) {
 
 /* ---------------- Navigation ---------------- */
 
+let currentScreen = 'inici';
+let screenBeforeConfig = 'inici';
+
 function showScreen(name) {
+  if (name === 'config' && currentScreen !== 'config') screenBeforeConfig = currentScreen;
+  currentScreen = name;
+  document.getElementById('openSettingsBtn')?.classList.toggle('active', name === 'config');
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(`screen-${name}`).classList.add('active');
   document.querySelectorAll('.tab').forEach(t => {
     t.classList.toggle('active', t.dataset.screen === name);
   });
+  if (name === 'config') renderConfig();
   if (name === 'inici') renderInici();
   if (name === 'avui') renderAvui();
   if (name === 'focus') renderFocus();
@@ -114,6 +121,8 @@ function showScreen(name) {
 }
 
 function bindNav() {
+  document.getElementById('openSettingsBtn').addEventListener('click', () => showScreen(currentScreen === 'config' ? screenBeforeConfig : 'config'));
+  document.getElementById('configBackBtn').addEventListener('click', () => showScreen(screenBeforeConfig));
   document.querySelectorAll('.tab').forEach(t => {
     t.addEventListener('click', () => showScreen(t.dataset.screen));
   });
@@ -147,6 +156,13 @@ function renderHeader() {
 }
 
 /* ---------------- AVUI ---------------- */
+
+// Dia que es mostra/edita a Avui (per defecte avui; es pot triar un dels últims 7 dies)
+let avuiDate = todayISO();
+
+function dayKeyOf(iso) {
+  return DAY_KEYS[new Date(iso + 'T00:00:00').getDay()];
+}
 
 function blankDailyRecord() {
   // Els hàbits manuals es guarden com a claus soltes (rec[habitKey]) — no cal predefinir-les aquí.
@@ -208,7 +224,7 @@ function renderTimeline(rec) {
   const section = document.getElementById('timelineSection');
   const list = document.getElementById('timelineList');
 
-  const horariBlocks = (state.horari && state.horari.horari && state.horari.horari[todayDayKey()]) || [];
+  const horariBlocks = (state.horari && state.horari.horari && state.horari.horari[dayKeyOf(avuiDate)]) || [];
   const items = horariBlocks.map(b => ({ hora: b.hora, nom: b.nom, kind: 'horari' }));
 
   state.habits.filter(h => h.time).forEach(h => {
@@ -258,8 +274,26 @@ function makeHabitKey(name) {
   return `${slugify(name)}_${Date.now().toString(36).slice(-4)}`;
 }
 
+function renderDayStrip() {
+  const el = document.getElementById('dayStrip');
+  const names = ['dg', 'dl', 'dm', 'dc', 'dj', 'dv', 'ds'];
+  el.innerHTML = Array.from({ length: 7 }, (_, i) => {
+    const iso = isoDaysAgo(6 - i);
+    const d = new Date(iso + 'T00:00:00');
+    const sel = iso === avuiDate;
+    return `<button type="button" class="day-chip ${sel ? 'selected' : ''}" data-day="${iso}" aria-pressed="${sel}"><strong>${d.getDate()}</strong>${i === 6 ? 'avui' : names[d.getDay()]}</button>`;
+  }).join('');
+  el.querySelectorAll('[data-day]').forEach(b => b.addEventListener('click', () => { avuiDate = b.dataset.day; renderAvui(); }));
+  const note = document.getElementById('dayNote');
+  note.hidden = avuiDate === todayISO();
+  if (!note.hidden) note.textContent = `Estàs editant ${dayKeyOf(avuiDate)} ${fmtDateShort(avuiDate)}. Toca "avui" per tornar.`;
+}
+
 function renderAvui() {
-  const today = todayISO();
+  if (avuiDate > todayISO() || daysBetween(avuiDate, todayISO()) > 6) avuiDate = todayISO();
+  const today = avuiDate; // el dia que s'està veient/editant
+  renderDayStrip();
+  renderSnapshot('avuiSnapshot', today);
   const rec = peekDaily(today); // només per mostrar — no crea res a l'estat fins que l'usuari interactua
 
   const untimedHabits = state.habits.filter(h => !h.time);
@@ -293,7 +327,7 @@ function renderAvui() {
   renderSleepBar(rec.bedtime);
   renderDotRow('sonWindow', 'sonOk');
 
-  const focusToday = state.focusSessions.filter(s => s.date === today).length;
+  const focusToday = state.focusSessions.filter(s => s.date === todayISO()).length;
   document.getElementById('focusTodayCount').textContent = focusToday;
   document.getElementById('focusTodayCountLabel').textContent = focusToday === 1 ? '1 sessió avui' : `${focusToday} sessions avui`;
 
@@ -312,8 +346,9 @@ function formatIniciDate() {
   return `${weekday} · ${now.getDate()} ${MONTH_NAMES[now.getMonth()]}`;
 }
 
-function renderIniciSnapshot() {
-  const today = todayISO();
+function renderIniciSnapshot() { renderSnapshot('iniciSnapshot', todayISO()); }
+
+function renderSnapshot(containerId, today) {
   const rec = peekDaily(today);
   const habitsDone = state.habits.filter(h => rec[h.key]).length;
   const focusToday = state.focusSessions.filter(s => s.date === today);
@@ -325,7 +360,7 @@ function renderIniciSnapshot() {
     { value: sleepDone ? '✓' : '—', label: 'son registrat' },
   ];
 
-  document.getElementById('iniciSnapshot').innerHTML = stats.map(s => `
+  document.getElementById(containerId).innerHTML = stats.map(s => `
     <div class="stat-block">
       <div class="stat-value mono">${s.value}</div>
       <div class="stat-label">${s.label}</div>
@@ -366,18 +401,16 @@ function isValidRoutine(obj) {
 
 function renderRoutineToday() {
   const empty = document.getElementById('routineEmpty');
-  const today = document.getElementById('routineToday');
+  const loaded = document.getElementById('routineLoaded');
+  const section = document.getElementById('routineSection');
   const routine = state.context && state.context.fisic;
 
-  if (!routine) {
-    empty.hidden = false;
-    today.hidden = true;
-    return;
-  }
-  empty.hidden = true;
-  today.hidden = false;
+  empty.hidden = !!routine;
+  loaded.hidden = !routine;
+  section.hidden = !routine;
+  if (!routine) return;
 
-  const dayData = routine.rutina[todayDayKey()];
+  const dayData = routine.rutina[dayKeyOf(avuiDate)];
   const label = dayData ? dayData.etiqueta : 'Descans';
   document.getElementById('routineDayLabel').textContent = label;
 
@@ -399,7 +432,7 @@ function renderRoutineToday() {
   const hasEntrenamentHabit = state.habits.some(h => h.key === 'entrenament');
   if (exercicis.length > 0 && hasEntrenamentHabit) {
     markBtn.hidden = false;
-    const done = !!peekDaily(todayISO()).entrenament;
+    const done = !!peekDaily(avuiDate).entrenament;
     markBtn.textContent = done ? 'Entrenament marcat ✓' : 'Marca "Entrenament" com a fet';
   } else {
     markBtn.hidden = true;
@@ -468,7 +501,7 @@ function renderHorariToday() {
   // aquí només confirmem que s'ha carregat correctament, sense duplicar-lo.
   document.getElementById('horariSummary').textContent = blocks.length === 0
     ? 'Horari carregat — cap bloc avui.'
-    : `Horari carregat — ${blocks.length} bloc${blocks.length === 1 ? '' : 's'} avui (a "Línia de temps", dalt).`;
+    : `Horari carregat — ${blocks.length} bloc${blocks.length === 1 ? '' : 's'} avui (a "Línia de temps", a Avui).`;
 }
 
 document.getElementById('horariFile')?.addEventListener('change', (e) => {
@@ -727,8 +760,9 @@ function isBedtimeOk(time) {
 }
 
 function toggleHabit(key) {
-  const rec = getDaily(todayISO());
+  const rec = getDaily(avuiDate);
   rec[key] = !rec[key];
+  if (rec[key] && navigator.vibrate) navigator.vibrate(30);
   saveState();
   renderAvui();
 }
@@ -821,10 +855,18 @@ function renderFocusHistory() {
     return;
   }
   ul.innerHTML = recent.map(s => `
-    <li class="history-item">
+    <li class="history-item history-item-tap" role="button" tabindex="0" data-del-session="${s.id}">
       <div class="h-top"><span>${fmtDateShort(s.date)}</span><span>${s.actualMinutes} min · ${COMPREHENSION_DOT[s.comprehension] || ''} · ${s.difficulty ? DIFFICULTY_LABEL[s.difficulty] : '–'} · ${s.interruptions} interr.</span></div>
       <div class="h-main">${escapeHtml(s.subject || '—')}${s.objective ? ' — ' + escapeHtml(s.objective) : ''}</div>
     </li>`).join('');
+  bindTapDelete(ul, '[data-del-session]', 'delSession', deleteSession);
+}
+
+function deleteSession(id) {
+  if (!confirm('Eliminar aquesta sessió de focus? No es pot desfer.')) return;
+  state.focusSessions = state.focusSessions.filter(s => String(s.id) !== String(id));
+  saveState();
+  renderFocus();
 }
 
 document.getElementById('startFocusBtn')?.addEventListener('click', () => {
@@ -1156,12 +1198,20 @@ function renderWeekHistory(currentWeekKey) {
     if (w.decisionOutcome) parts.push(`decisió anterior: ${outcomeLabel[w.decisionOutcome]}`);
     const decisionLine = w.decision ? `<div class="h-main" style="margin-top:4px;">→ ${escapeHtml(w.decision)}</div>` : '';
     return `
-      <li class="history-item">
+      <li class="history-item history-item-tap" role="button" tabindex="0" data-del-week="${k}">
         <div class="h-top"><span>Setmana ${fmtDateShort(k)}</span></div>
         <div class="h-main mono">${parts.length ? parts.join(' · ') : '—'}</div>
         ${decisionLine}
       </li>`;
   }).join('');
+  bindTapDelete(ul, '[data-del-week]', 'delWeek', deleteWeek);
+}
+
+function deleteWeek(key) {
+  if (!confirm(`Eliminar la setmana del ${fmtDateShort(key)}? No es pot desfer.`)) return;
+  delete state.weeks[key];
+  saveState();
+  renderSetmana();
 }
 
 document.querySelectorAll('#phoneUsageSeg .seg-btn').forEach(btn => {
@@ -1236,6 +1286,20 @@ document.getElementById('importFile')?.addEventListener('change', (e) => {
 });
 
 /* ---------------- Utils ---------------- */
+
+function renderConfig() {
+  renderHabitManager();
+  renderRoutineToday();
+  renderHorariToday();
+}
+
+function bindTapDelete(ul, selector, dataKey, fn) {
+  ul.querySelectorAll(selector).forEach(li => {
+    const go = () => fn(li.dataset[dataKey]);
+    li.addEventListener('click', go);
+    li.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+  });
+}
 
 function escapeHtml(str) {
   const div = document.createElement('div');

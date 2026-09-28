@@ -19,7 +19,10 @@
   <header class="statusbar">
     <div class="statusbar-top">
       <div class="wordmark">SEPTEMBER<span>· personal os</span></div>
-      <div class="clock" id="clock">--:--</div>
+      <div class="statusbar-actions">
+        <div class="clock" id="clock">--:--</div>
+        <button class="gear-btn" id="openSettingsBtn" aria-label="Configuració"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="10" cy="10" r="2.6"/><path d="M10 2.5v2.2M10 15.3v2.2M2.5 10h2.2M15.3 10h2.2M4.7 4.7l1.6 1.6M13.7 13.7l1.6 1.6M4.7 15.3l1.6-1.6M13.7 6.3l1.6-1.6"/></svg></button>
+      </div>
     </div>
     <div class="countdown-row">
       <div class="countdown-num" id="dayCounter">--</div>
@@ -64,6 +67,14 @@
     <section id="screen-avui" class="screen">
       <h1 class="screen-title">Avui</h1>
 
+      <div class="stat-row" id="avuiSnapshot"></div>
+
+      <div class="section">
+        <div class="section-label">Dies recents</div>
+        <div class="day-strip" id="dayStrip"></div>
+        <p class="hint-text" id="dayNote" hidden></p>
+      </div>
+
       <div class="section" id="timelineSection" hidden>
         <div class="section-label">Línia de temps</div>
         <ul id="timelineList" class="habit-list"></ul>
@@ -74,36 +85,11 @@
         <ul id="habitList" class="habit-list"></ul>
       </div>
 
-      <div class="section">
+      <div class="section" id="routineSection" hidden>
         <div class="section-label">Rutina d'avui</div>
-        <div id="routineEmpty">
-          <p class="hint-text" style="margin-top:0;">Sense rutina carregada. Puja un JSON amb la teva rutina setmanal.</p>
-          <input type="file" id="routineFile" accept="application/json">
-        </div>
-        <div id="routineToday" hidden>
-          <div class="row">
-            <span class="row-label" id="routineDayLabel">—</span>
-            <button class="remove-btn" id="removeRoutineBtn" aria-label="Treure la rutina">✕</button>
-          </div>
-          <ul class="exercise-list" id="exerciseList"></ul>
-          <button class="btn btn-ghost btn-compact" id="markRoutineDoneBtn" style="margin-top:10px;" hidden>Marca "Entrenament" com a fet</button>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-label">Horari</div>
-        <div id="horariEmpty">
-          <p class="hint-text" style="margin-top:0;">Sense horari carregat. Puja un JSON amb els blocs de la teva setmana (classes, EOI, acadèmia, gimnàs...).</p>
-          <input type="file" id="horariFile" accept="application/json">
-        </div>
-        <div id="horariToday" hidden>
-          <p class="hint-text" style="margin-top:0;" id="horariSummary"></p>
-          <div class="row" style="margin-top:12px;">
-            <button class="remove-btn" id="removeHorariBtn" aria-label="Treure l'horari">✕</button>
-            <button class="btn btn-ghost btn-compact" id="exportIcsBtn">Exportar a calendari (.ics)</button>
-          </div>
-          <p class="hint-text">Importa aquest .ics al Calendari del mòbil perquè les notificacions les faci el sistema, no la PWA.</p>
-        </div>
+        <div class="row"><span class="row-label" id="routineDayLabel">—</span></div>
+        <ul class="exercise-list" id="exerciseList"></ul>
+        <button class="btn btn-ghost btn-compact" id="markRoutineDoneBtn" style="margin-top:10px;" hidden>Marca "Entrenament" com a fet</button>
       </div>
 
       <div class="section">
@@ -121,17 +107,6 @@
           <span class="row-label">Dins la franja objectiu (23:30–00:30)</span>
           <span class="dot-row" id="sonWindow"></span>
         </div>
-      </div>
-
-      <div class="section">
-        <div class="section-label">Gestionar hàbits</div>
-        <ul id="habitManageList" class="manage-list"></ul>
-        <div class="add-habit-row">
-          <input type="text" id="newHabitName" placeholder="Nom del nou hàbit">
-          <input type="time" id="newHabitTime" class="add-habit-time" title="Hora opcional" aria-label="Hora opcional del nou hàbit">
-          <button class="btn btn-ghost btn-compact" id="addHabitBtn">+ Afegir</button>
-        </div>
-        <p class="hint-text">L'hora és opcional — deixa-la en blanc per a hàbits sense horari fix.</p>
       </div>
 
       <div class="card card-cta">
@@ -246,6 +221,7 @@
 
       <div class="section">
         <div class="section-label">Sessions recents</div>
+        <p class="hint-text" style="margin-top:0;">Toca una sessió per eliminar-la.</p>
         <ul id="focusHistory" class="history-list"></ul>
       </div>
     </section>
@@ -325,6 +301,7 @@
 
       <div class="section">
         <div class="section-label">Setmanes anteriors</div>
+        <p class="hint-text" style="margin-top:0;">Toca una setmana per eliminar-la.</p>
         <ul id="weekHistory" class="history-list"></ul>
       </div>
 
@@ -333,9 +310,57 @@
         <button class="btn btn-ghost" id="exportBtn">Exportar dades (.json)</button>
         <div class="field" style="margin-top:12px;">
           <label for="importFile">Importar còpia de seguretat</label>
-          <input type="file" id="importFile" accept="application/json">
+          <span class="btn btn-ghost btn-compact file-btn"><span>Triar fitxer…</span><input type="file" id="importFile" accept="application/json"></span>
         </div>
       </div>
+    </section>
+
+    <!-- CONFIGURACIÓ -->
+    <section id="screen-config" class="screen">
+      <button class="link-btn config-back" id="configBackBtn">‹ Tornar</button>
+      <h1 class="screen-title">Configuració</h1>
+
+      <div class="section">
+        <div class="section-label">Rutina</div>
+        <div id="routineEmpty">
+          <p class="hint-text" style="margin-top:0;">Sense rutina carregada. Puja un JSON amb la teva rutina setmanal.</p>
+          <span class="btn btn-ghost btn-compact file-btn"><span>Triar fitxer…</span><input type="file" id="routineFile" accept="application/json"></span>
+        </div>
+        <div id="routineLoaded" hidden>
+          <div class="row">
+            <span class="row-label">Rutina carregada (es mostra a Avui)</span>
+            <button class="remove-btn" id="removeRoutineBtn" aria-label="Treure la rutina">✕</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Horari</div>
+        <div id="horariEmpty">
+          <p class="hint-text" style="margin-top:0;">Sense horari carregat. Puja un JSON amb els blocs de la teva setmana (classes, EOI, acadèmia, gimnàs...).</p>
+          <span class="btn btn-ghost btn-compact file-btn"><span>Triar fitxer…</span><input type="file" id="horariFile" accept="application/json"></span>
+        </div>
+        <div id="horariToday" hidden>
+          <p class="hint-text" style="margin-top:0;" id="horariSummary"></p>
+          <div class="row" style="margin-top:12px;">
+            <button class="remove-btn" id="removeHorariBtn" aria-label="Treure l'horari">✕</button>
+            <button class="btn btn-ghost btn-compact" id="exportIcsBtn">Exportar a calendari (.ics)</button>
+          </div>
+          <p class="hint-text">Importa aquest .ics al Calendari del mòbil perquè les notificacions les faci el sistema, no la PWA.</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Gestionar hàbits</div>
+        <ul id="habitManageList" class="manage-list"></ul>
+        <div class="add-habit-row">
+          <input type="text" id="newHabitName" placeholder="Nom del nou hàbit">
+          <input type="time" id="newHabitTime" class="add-habit-time" title="Hora opcional" aria-label="Hora opcional del nou hàbit">
+          <button class="btn btn-ghost btn-compact" id="addHabitBtn">+ Afegir</button>
+        </div>
+        <p class="hint-text">L'hora és opcional — deixa-la en blanc per a hàbits sense horari fix.</p>
+      </div>
+
     </section>
 
   </main>
